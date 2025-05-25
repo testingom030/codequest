@@ -4,6 +4,7 @@ import Home from './pages/Home/Home'
 import Askquestion from './pages/Askquestion/Askquestion'
 import Auth from './pages/Auth/Auth'
 import Question from './pages/Question/Question'
+import About from './pages/About/About'
 import Displayquestion from './pages/Question/Displayquestion'
 import Tags from './pages/Tags/Tags'
 import Users from './pages/Users/Users'
@@ -19,6 +20,7 @@ function Allroutes({slidein,handleslidein}) {
         <Route path='/Tags' element={<Tags slidein={slidein} handleslidein={handleslidein}/>}/>
         <Route path='/Users' element={<Users slidein={slidein} handleslidein={handleslidein}/>}/>
         <Route path='/Users/:id' element={<Userprofile slidein={slidein} handleslidein={handleslidein}/>}/>
+        <Route path='/about' element={<About />}/>
     </Routes>
   )
 }

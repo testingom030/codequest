@@ -6,6 +6,7 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import Allroutes from './Allroutes'
 import { useDispatch } from 'react-redux';
 import { fetchallquestion } from './action/question';
+import { LanguageProvider } from './utils/LanguageContext';
 function App() {
   const [slidein,setslidein]=useState(true)
   const dispatch=useDispatch()
@@ -26,12 +27,14 @@ useEffect(()=>{
   };
 
   return (
-    <div className="App">
-      <Router>
-      <Navbar handleslidein={handleslidein}/>
-      <Allroutes slidein={slidein} handleslidein={handleslidein}/>
-      </Router>
-    </div>
+    <LanguageProvider>
+      <div className="App">
+        <Router>
+          <Navbar handleslidein={handleslidein}/>
+          <Allroutes slidein={slidein} handleslidein={handleslidein}/>
+        </Router>
+      </div>
+    </LanguageProvider>
   );
 }
 

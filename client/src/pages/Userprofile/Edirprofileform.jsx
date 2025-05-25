@@ -2,26 +2,72 @@ import React, { useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { updateprofile } from '../../action/users'
 import './Userprofile.css'
+
 const Edirprofileform = ({ currentuser, setswitch }) => {
   const [name, setname] = useState(currentuser?.result?.name)
   const [about, setabout] = useState(currentuser?.result?.about)
   const [tags, settags] = useState([])
-  const dispatch=useDispatch()
+  const [avatar, setAvatar] = useState(null)
+  const dispatch = useDispatch()
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      
+      try {
+        const response = await fetch('/avatar/update', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('Profile')}`,
+          },
+          body: formData
+        });
+        const data = await response.json();
+        if (data.avatar) {
+          dispatch(updateprofile(currentuser?.result?._id, { name, about, tags, avatar: data.avatar }))
+        }
+      } catch (error) {
+        console.error('Error uploading avatar:', error);
+      }
+    }
+  }
 
   const handlesubmit = (e) => {
     e.preventDefault()
     if (tags[0] === '' || tags.length === 0) {
       alert("update tags field")
-    }else{
-      dispatch(updateprofile(currentuser?.result?._id,{name,about,tags}))
+    } else {
+      dispatch(updateprofile(currentuser?.result?._id, { name, about, tags }))
     }
     setswitch(false)
   }
+
   return (
     <div>
       <h1 className="edit-profile-title">Edit Your Profile</h1>
       <h2 className='edit-profile-title-2'>Public Information</h2>
       <form className="edit-profile-form" onSubmit={handlesubmit}>
+        <label htmlFor="avatar" className="avatar-upload">
+          <h3>Profile Picture</h3>
+          <div className="avatar-preview">
+            <img 
+              src={currentuser?.result?.avatar || 'https://www.gravatar.com/avatar/?d=identicon'} 
+              alt="Current avatar"
+              className="current-avatar"
+            />
+          </div>
+          <input
+            type="file"
+            id="avatar"
+            accept="image/*"
+            onChange={handleAvatarChange}
+            className="avatar-input"
+          />
+          <button type="button" className="upload-avatar-btn">Change Picture</button>
+        </label>
+
         <label htmlFor="name">
           <h3>Display name</h3>
           <input type="text" value={name} onChange={(e) => setname(e.target.value)} />

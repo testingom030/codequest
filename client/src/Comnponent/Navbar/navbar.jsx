@@ -8,11 +8,15 @@ import Avatar from '../Avatar/Avatar';
 import './navbar.css';
 import {setcurrentuser} from '../../action/currentuser'
 import {jwtDecode} from "jwt-decode"
+import { useLanguage } from '../../utils/LanguageContext';
+import LanguageSelector from '../LanguageSelector/LanguageSelector';
+
 function Navbar({ handleslidein }) {
     var User = useSelector((state)=>state.currentuserreducer)
-    // console.log(User)
     const navigate = useNavigate()
     const dispatch = useDispatch();
+    const { translate } = useLanguage();
+
     const handlelogout = useCallback(() => {
         dispatch({type:"LOGOUT"})
         navigate("/")
@@ -29,6 +33,7 @@ function Navbar({ handleslidein }) {
         }
         dispatch(setcurrentuser(JSON.parse(localStorage.getItem("Profile"))))
     },[User?.token, dispatch, handlelogout]);
+
     return (
         <nav className="main-nav">
             <div className="navbar">
@@ -39,23 +44,28 @@ function Navbar({ handleslidein }) {
                     <Link to='/' className='nav-item nav-logo'>
                         <img src={logo} alt="logo" />
                     </Link>
-                    <Link to="/" className="nav-item nav-btn res-nav">
-                        About
+                    <Link to="/about" className="nav-item nav-btn res-nav">
+                        {translate('About')}
                     </Link>
-                    <Link to="/" className="nav-item nav-btn res-nav">
-                        Products
+                    <Link to="/products" className="nav-item nav-btn res-nav">
+                        {translate('Products')}
                     </Link>
-                    <Link to="/" className="nav-item nav-btn res-nav">
-                        For Teams
+                    <Link to="/teams" className="nav-item nav-btn res-nav">
+                        {translate('For Teams')}
                     </Link>
-                    <form><input type="text" placeholder='Search...' />
+                    <form>
+                        <input 
+                            type="text" 
+                            placeholder={translate('Search...')} 
+                        />
                         <img src={search} alt="search" width='18' className='search-icon' />
                     </form>
                 </div>
                 <div className="navbar-2">
+                    <LanguageSelector />
                     {User === null ? (
                         <Link to='/Auth' className='nav-item nav-links'>
-                            Log in
+                            {translate('Log in')}
                         </Link>
                     ) : (
                         <>
@@ -64,7 +74,9 @@ function Navbar({ handleslidein }) {
                                 {User.result.name.charAt(0).toUpperCase()}
                                 </Link>
                             </Avatar>
-                            <button className="nav-tem nav-links" onClick={handlelogout}>Log out</button>
+                            <button className="nav-item nav-links" onClick={handlelogout}>
+                                {translate('Logout')}
+                            </button>
                         </>
                     )}
                 </div>

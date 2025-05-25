@@ -80,3 +80,43 @@
     cursor: pointer;
   }
   
+  .avatar-upload {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .avatar-preview {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 10px 0;
+    border: 2px solid #dbd9d9;
+  }
+  
+  .current-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .avatar-input {
+    display: none;
+  }
+  
+  .upload-avatar-btn {
+    padding: 8px 16px;
+    background-color: #0a95ff;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+  }
+  
+  .upload-avatar-btn:hover {
+    background-color: #0074cc;
+  }
