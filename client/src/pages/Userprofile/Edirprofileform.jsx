@@ -10,38 +10,44 @@ const Edirprofileform = ({ currentuser, setswitch }) => {
   const [avatar, setAvatar] = useState(null)
   const dispatch = useDispatch()
 
-  const handleAvatarChange = async (e) => {
+  const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setAvatar(file);
+    }
+  }
+
+  const handlesubmit = async (e) => {
+    e.preventDefault()
+    if (tags[0] === '' || tags.length === 0) {
+      alert("update tags field")
+      return
+    }
+
+    if (avatar) {
       const formData = new FormData();
-      formData.append('avatar', file);
+      formData.append('avatar', avatar);
       
       try {
         const response = await fetch('/avatar/update', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('Profile')}`,
+            'Authorization': `Bearer ${JSON.parse(localStorage.getItem('Profile')).token}`
           },
           body: formData
         });
+        
         const data = await response.json();
         if (data.avatar) {
-          dispatch(updateprofile(currentuser?.result?._id, { name, about, tags, avatar: data.avatar }))
+          dispatch(updateprofile(currentuser?.result?._id, { name, about, tags, avatar: data.avatar }));
         }
       } catch (error) {
         console.error('Error uploading avatar:', error);
       }
-    }
-  }
-
-  const handlesubmit = (e) => {
-    e.preventDefault()
-    if (tags[0] === '' || tags.length === 0) {
-      alert("update tags field")
     } else {
-      dispatch(updateprofile(currentuser?.result?._id, { name, about, tags }))
+      dispatch(updateprofile(currentuser?.result?._id, { name, about, tags }));
     }
-    setswitch(false)
+    setswitch(false);
   }
 
   return (

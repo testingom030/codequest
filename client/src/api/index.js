@@ -16,8 +16,14 @@ API.interceptors.request.use((req)=>{
 export const login=(authdata)=>API.post("user/login",authdata);
 export const signup=(authdata)=>API.post("user/signup",authdata);
 export const getallusers=()=> API.get("/user/getallusers");
-export const updateprofile=(id,updatedata)=>API.patch(`user/update/${id}`,updatedata)
+export const updateprofile=(id,updatedata)=>API.patch(`user/update/${id}`,updatedata);
 
+// Friend-related API calls
+export const getFriendsList = () => API.get('/user/friends/list');
+export const getFriendRequests = () => API.get('/user/friends/requests');
+export const sendFriendRequest = (userId) => API.post('/user/friends/request', { receiverId: userId });
+export const acceptFriendRequest = (requestId) => API.put(`/user/friends/request/${requestId}/accept`);
+export const removeFriend = (friendId) => API.delete(`/user/friends/${friendId}`);
 
 export const postquestion=(questiondata)=>API.post("/questions/Ask",questiondata);
 export const getallquestions=()=>API.get("/questions/get");

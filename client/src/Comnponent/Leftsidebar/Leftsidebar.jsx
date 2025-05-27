@@ -34,7 +34,17 @@ const Leftsidebar = ({ slidein }) => {
           </button>
           <button className='nav-btnn'>
             <NavLink to='/Users' className='side-nav-links' activeclassname='active' style={{paddingLeft:"40px"}}>
-            <p >Users</p>
+            <p>Users</p>
+            </NavLink>
+          </button>
+          <button className='nav-btnn'>
+            <NavLink to='/Friends' className='side-nav-links' activeclassname='active' style={{paddingLeft:"40px"}}>
+            <p>Friends</p>
+            </NavLink>
+          </button>
+          <button className='nav-btnn'>
+            <NavLink to='/Feed' className='side-nav-links' activeclassname='active' style={{paddingLeft:"40px"}}>
+            <p>Feed</p>
             </NavLink>
           </button>
         </div>

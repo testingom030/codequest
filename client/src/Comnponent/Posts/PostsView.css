@@ -1,0 +1,33 @@
+.posts-view {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.posts-loading,
+.posts-error,
+.no-posts {
+  text-align: center;
+  padding: 20px;
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.posts-error {
+  color: #dc3545;
+  background-color: #f8d7da;
+}
+
+.posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .posts-view {
+    padding: 10px;
+  }
+}

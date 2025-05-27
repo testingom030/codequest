@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { useLanguage } from '../../utils/LanguageContext';
 import Avatar from '../Avatar/Avatar';
 import moment from 'moment';
 import './Post.css';

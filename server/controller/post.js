@@ -25,18 +25,23 @@ export const createPost = async (req, res) => {
         const post = new Post({
             user: req.userId,
             content: req.body.content,
-            image: req.body.image,
+            image: req.file?.path, // Use uploaded file path if exists
             video: req.body.video
         });
 
         await post.save();
 
+        // Update user's post count and last post date
         user.lastPostDate = new Date();
         user.postCount += 1;
         await user.save();
 
+        // Populate user details before sending response
+        await post.populate('user', 'name avatar');
+        
         res.status(201).json(post);
     } catch (error) {
+        console.error('Create post error:', error);
         res.status(500).json({ message: 'Something went wrong', error: error.message });
     }
 };
