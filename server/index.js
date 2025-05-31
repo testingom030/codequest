@@ -20,7 +20,7 @@ app.use(express.json({ limit: "30mb", extended: true }))
 app.use(express.urlencoded({ limit: "30mb", extended: true }))
 // Configure CORS
 app.use(cors({
-    origin: ['https://code-quest-frontend-sigma.vercel.app', 'http://localhost:3000'],
+    origin: ['https://code-quest-frontend-sigma.vercel.app', 'http://localhost:3000', 'https://code-quest-flame.vercel.app'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
 }));
