@@ -58,10 +58,15 @@ mongoose.connect(database_url, {
 })
     .then(() => {
         console.log('Connected to MongoDB successfully');
-        app.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
-        });
+        if (process.env.NODE_ENV !== 'production') {
+            app.listen(PORT, () => {
+                console.log(`Server running on port ${PORT}`);
+            });
+        }
     })
     .catch((err) => {
         console.error('Error connecting to MongoDB:', err.message);
     });
+
+// Export the Express API
+export default app;
