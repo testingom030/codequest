@@ -58,12 +58,9 @@ mongoose.connect(database_url, {
 })
     .then(() => {
         console.log('Connected to MongoDB successfully');
-        // Only start the server in development
-        if (process.env.NODE_ENV !== 'production') {
-            app.listen(PORT, () => {
-                console.log(`Server running on port ${PORT}`);
-            });
-        }
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
     })
     .catch((err) => {
         console.error('Error connecting to MongoDB:', err.message);
