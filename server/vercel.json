@@ -11,5 +11,15 @@
       "src": "/(.*)",
       "dest": "index.js"
     }
-  ]
+  ],
+  "env": {
+    "CLOUDINARY_CLOUD_NAME": "dsja282yq",
+    "CLOUDINARY_API_KEY": "476395277599171",
+    "CLOUDINARY_API_SECRET": "hsSQIonKbEvLSsvf0nTzOCVj5iE",
+    "EMAIL_USER": "hitenvk22@gmail.com",
+    "EMAIL_PASSWORD": "Hiten2211@",
+    "TWILIO_ACCOUNT_SID": "AC8be2eb54dbe2269bf586d62f08b36b64",
+    "TWILIO_AUTH_TOKEN": "4d3c201d7d25ae6252eb1224038ea5ad",
+    "TWILIO_PHONE_NUMBER": "+15642346121"
+  }
 }
