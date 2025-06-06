@@ -41,14 +41,20 @@ const About = () => {
             <p>{translate('Access the platform in multiple languages for a better experience.')}</p>
           </div>
         </div>
-      </section>
-
-      <section className="about-section">
+      </section>      <section className="about-section">
         <h2>{translate('Contact Us')}</h2>
         <div className="contact-info">
-          <div>
+          <div className="contact-item">
+            <i className="fas fa-phone"></i>
+            <p>+91 9099590979</p>
+          </div>
+          <div className="contact-item">
+            <i className="fas fa-map-marker-alt"></i>
+            <p>B-902, Vaibhav Luxuria<br/>Kumabharia, Surat</p>
+          </div>
+          <div className="contact-item">
             <i className="fas fa-envelope"></i>
-            <p>contact@codequest.com</p>
+            <p>hitenvk22@gmail.com</p>
           </div>
           <div>
             <i className="fas fa-phone"></i>
