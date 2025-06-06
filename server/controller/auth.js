@@ -2,8 +2,13 @@ import users from '../models/auth.js'
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 export const signup = async (req, res) => {
+    console.log('Signup Request Body:', req.body); // Debug log
     const { name, email, password } = req.body;
     try {
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
+
         const extinguser = await users.findOne({ email });
         if (extinguser) {
             return res.status(404).json({ message: "User already exist" });
@@ -20,7 +25,8 @@ export const signup = async (req, res) => {
         )
         res.status(200).json({ result: newuser, token });
     } catch (error) {
-        res.status(500).json("something went wrong...")
+        console.error('Signup error:', error);
+        res.status(500).json({ message: "something went wrong...", error: error.message });
         return
     }
 }
@@ -44,7 +50,12 @@ export const login = async (req, res) => {
 
         res.status(200).json({ result: extinguser, token })
     } catch (error) {
-        res.status(500).json("something went wrong...")
+        console.error('Signup Error:', error); // Enhanced error logging
+        res.status(500).json({
+            message: "something went wrong...",
+            error: error.message,
+            type: error.name
+        });
         return
     }
 }

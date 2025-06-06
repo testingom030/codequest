@@ -49,6 +49,17 @@ app.get('/health', async (req, res) => {
     }
 });
 
+app.post('/debug/echo', (req, res) => {
+    console.log('Debug - Headers:', req.headers);
+    console.log('Debug - Body:', req.body);
+    res.json({
+        received: {
+            body: req.body,
+            contentType: req.headers['content-type']
+        }
+    });
+});
+
 app.use("/user", userroutes);
 app.use('/questions', questionroutes);
 app.use('/answer', answerroutes);
