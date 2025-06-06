@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { getPosts } from '../../api';
 import CreatePost from '../../Comnponent/Posts/CreatePost';
 import PostsView from '../../Comnponent/Posts/PostsView';
 import FriendSearch from '../../Comnponent/Friends/FriendSearch';
@@ -8,6 +9,7 @@ import './Feed.css';
 const Feed = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const user = useSelector(state => state.currentuserreducer);
 
   useEffect(() => {
@@ -16,15 +18,14 @@ const Feed = () => {
 
   const fetchPosts = async () => {
     try {
-      const response = await fetch('/posts/feed', {
-        headers: {
-          'Authorization': `Bearer ${JSON.parse(localStorage.getItem('Profile')).token}`
-        }
-      });
-      const data = await response.json();
+      setLoading(true);
+      setError(null);
+      const { data } = await getPosts();
       setPosts(data);
     } catch (error) {
       console.error('Error fetching posts:', error);
+      setError(error.response?.data?.message || 'Error loading posts');
+      setPosts([]);
     } finally {
       setLoading(false);
     }
@@ -38,11 +39,13 @@ const Feed = () => {
     <div className="feed-container">
       <div className="feed-main">
         <div className="feed-left">
-          <CreatePost onPostCreated={handlePostCreated} />
+          {user && <CreatePost onPostCreated={handlePostCreated} />}
           {loading ? (
             <div className="loading">Loading posts...</div>
+          ) : error ? (
+            <div className="error-message">{error}</div>
           ) : (
-            <PostsView posts={posts} />
+            <PostsView posts={posts} onPostUpdate={fetchPosts} />
           )}
         </div>
         <div className="feed-right">

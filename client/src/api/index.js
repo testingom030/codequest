@@ -33,3 +33,9 @@ export const votequestion=(id,value)=>API.patch(`/questions/vote/${id}`,{value})
 
 export const postanswer=(id,noofanswers,answerbody,useranswered,userid)=>API.patch(`/answer/post/${id}`,{noofanswers,answerbody,useranswered,userid});
 export const deleteanswer=(id,answerid,noofanswers)=>API.patch(`/answer/delete/${id}`,{answerid,noofanswers});
+
+// Posts API calls
+export const createPost = (postData) => API.post('/posts/create', postData);
+export const getPosts = () => API.get('/posts/feed');
+export const likePost = (postId) => API.post(`/posts/${postId}/like`);
+export const commentPost = (postId, commentData) => API.post(`/posts/${postId}/comment`, commentData);
