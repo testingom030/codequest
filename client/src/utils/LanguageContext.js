@@ -25,22 +25,28 @@ export const LanguageProvider = ({ children }) => {
       return { success: false, message: 'Please log in first' };
     }
 
-    if (verificationType === 'none') {
-      return { success: true };
-    }
-
     setLoading(true);
     try {
-      const endpoint = verificationType === 'email' ? '/verify-email' : '/verify-phone';
+      const endpoint = verificationType === 'email' ? '/api/language/verify-email' : '/api/language/verify-phone';
       const payload = {
         language: newLanguage,
         ...(verificationType === 'email' ? { email: currentUser.email } : { phone: currentUser.phone })
       };
 
-      const response = await axios.post(`/api/language${endpoint}`, payload);
+      const response = await axios.post(endpoint, payload, {
+        headers: {
+          'Authorization': `Bearer ${currentUser.token}`
+        }
+      });
+
       setVerificationId(response.data.verificationId);
-      return { success: true, message: `Verification code sent to your ${verificationType}` };
+      return { 
+        success: true, 
+        message: `Verification code sent to your ${verificationType}`,
+        verification: verificationType
+      };
     } catch (error) {
+      console.error('Verification error:', error);
       return { 
         success: false, 
         message: error.response?.data?.message || 'Failed to send verification code' 
@@ -50,23 +56,33 @@ export const LanguageProvider = ({ children }) => {
     }
   };
 
-  const verifyAndChangeLanguage = async (code, newLanguage) => {
+  const verifyCode = async (code, verificationId, newLanguage) => {
     if (!verificationId) {
       return { success: false, message: 'Please initiate verification first' };
     }
 
     setLoading(true);
     try {
+      const currentUser = JSON.parse(localStorage.getItem('Profile'))?.result;
+      if (!currentUser) {
+        throw new Error('Authentication required');
+      }
+
       await axios.post('/api/language/verify-code', {
         code,
         verificationId,
         language: newLanguage
+      }, {
+        headers: {
+          'Authorization': `Bearer ${currentUser.token}`
+        }
       });
 
       setCurrentLanguage(newLanguage);
       localStorage.setItem('preferredLanguage', newLanguage);
       return { success: true, message: 'Language changed successfully' };
     } catch (error) {
+      console.error('Verification error:', error);
       return { 
         success: false, 
         message: error.response?.data?.message || 'Verification failed' 
@@ -95,7 +111,7 @@ export const LanguageProvider = ({ children }) => {
       loading,
       translate,
       initiateVerification,
-      verifyAndChangeLanguage
+      verifyCode
     }}>
       {children}
     </LanguageContext.Provider>

@@ -1,29 +1,36 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../utils/LanguageContext';
+import { useSelector } from 'react-redux';
 import './LanguageSelector.css';
 
 const LanguageSelector = () => {
   const { 
     currentLanguage, 
     languages, 
-    verifyLanguageChange, 
+    initiateVerification, 
     verifyCode,
     loading 
   } = useLanguage();
-
+  
   const [showVerification, setShowVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
   const [verificationId, setVerificationId] = useState('');
   const [newLanguage, setNewLanguage] = useState('');
   const [error, setError] = useState('');
   const [verificationType, setVerificationType] = useState('');
+  const currentUser = useSelector(state => state.currentuserreducer);
 
   const handleLanguageChange = async (e) => {
     const selectedLanguage = e.target.value;
     if (selectedLanguage === currentLanguage) return;
 
+    if (!currentUser?.result) {
+      setError('Please log in to change language');
+      return;
+    }
+
     setNewLanguage(selectedLanguage);
-    const result = await verifyLanguageChange(selectedLanguage);
+    const result = await initiateVerification(selectedLanguage);
 
     if (result.success) {
       setVerificationId(result.verificationId);
@@ -37,6 +44,12 @@ const LanguageSelector = () => {
 
   const handleVerificationSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!verificationCode.trim()) {
+      setError('Please enter the verification code');
+      return;
+    }
+
     const result = await verifyCode(verificationCode, verificationId, newLanguage);
 
     if (result.success) {
@@ -62,6 +75,10 @@ const LanguageSelector = () => {
         ))}
       </select>
 
+      {error && !showVerification && (
+        <div className="error-message">{error}</div>
+      )}
+
       {showVerification && (
         <div className="verification-modal">
           <div className="verification-content">
@@ -80,7 +97,7 @@ const LanguageSelector = () => {
                 maxLength={6}
               />
               <div className="verification-buttons">
-                <button type="submit" disabled={loading}>
+                <button type="submit" disabled={loading || !verificationCode.trim()}>
                   {loading ? 'Verifying...' : 'Verify'}
                 </button>
                 <button 
