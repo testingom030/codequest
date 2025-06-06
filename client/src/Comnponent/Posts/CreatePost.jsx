@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useLanguage } from '../../utils/LanguageContext';
 import './CreatePost.css';
 
-const CreatePost = () => {
+const CreatePost = ({ onPostCreated }) => {
   const [content, setContent] = useState('');
   const [media, setMedia] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -15,9 +15,21 @@ const CreatePost = () => {
   const handleMediaChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setError(translate('File size must be less than 5MB'));
+        return;
+      }
+      // Validate file type
+      if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+        setError(translate('Only images and videos are allowed'));
+        return;
+      }
       setMedia(file);
+      setError('');
     }
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!content.trim() && !media) {
@@ -29,20 +41,23 @@ const CreatePost = () => {
     setIsSubmitting(true);
     const formData = new FormData();
     formData.append('content', content);
+    
     if (media) {
       formData.append('media', media);
-    }    try {
-        const token = user?.result?.token || JSON.parse(localStorage.getItem('Profile'))?.token;
-        if (!token) {
-          throw new Error('Please log in to create a post');
-        }
-        
-        const response = await fetch('/posts/create', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          body: formData
+    }
+
+    try {
+      const token = user?.result?.token || JSON.parse(localStorage.getItem('Profile'))?.token;
+      if (!token) {
+        throw new Error('Please log in to create a post');
+      }
+      
+      const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/posts/create`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
       });
 
       const data = await response.json();
@@ -52,6 +67,9 @@ const CreatePost = () => {
       }
 
       dispatch({ type: 'CREATE_POST', payload: data });
+      if (onPostCreated) {
+        onPostCreated(data);
+      }
       setContent('');
       setMedia(null);
     } catch (error) {
@@ -61,6 +79,7 @@ const CreatePost = () => {
       setIsSubmitting(false);
     }
   };
+
   return (
     <div className="create-post">
       <h3>{translate('Create Post')}</h3>
@@ -69,7 +88,8 @@ const CreatePost = () => {
           placeholder={translate("What's on your mind?")}
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          required
+          required={!media}
+          className={error ? 'error' : ''}
         />
         
         {error && <p className="error-message">{error}</p>}
@@ -77,7 +97,7 @@ const CreatePost = () => {
         <div className="media-upload">
           <label htmlFor="media-input" className="media-label">
             <i className="fas fa-image"></i>
-            <span>Add Photo/Video</span>
+            <span>{translate('Add Photo/Video')}</span>
           </label>
           <input
             type="file"
@@ -97,18 +117,20 @@ const CreatePost = () => {
                 type="button" 
                 className="remove-media"
                 onClick={() => setMedia(null)}
+                aria-label={translate('Remove media')}
               >
                 ×
               </button>
             </div>
           )}
-        </div>          <button 
-            type="submit" 
-            className="post-btn" 
-            disabled={isSubmitting || (!content.trim() && !media)}
-          >
-            {isSubmitting ? translate('Posting...') : translate('Post')}
-          </button>
+        </div>
+        <button 
+          type="submit" 
+          className="post-btn" 
+          disabled={isSubmitting || (!content.trim() && !media)}
+        >
+          {isSubmitting ? translate('Posting...') : translate('Post')}
+        </button>
       </form>
     </div>
   );

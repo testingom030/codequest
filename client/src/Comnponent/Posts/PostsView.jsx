@@ -54,25 +54,27 @@ const PostsView = () => {
     );
   }
 
+  if (!posts || posts.length === 0) {
+    return (
+      <div className="no-posts">
+        <p>{translate('No posts yet. Be the first to share something!')}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="posts-view">
       <CreatePost onPostCreated={fetchPosts} />
       
-      {posts.length === 0 ? (
-        <div className="no-posts">
-          {translate('No posts yet. Be the first to post!')}
-        </div>
-      ) : (
-        <div className="posts-list">
-          {posts.map(post => (
-            <Post 
-              key={post._id} 
-              post={post}
-              onPostUpdated={fetchPosts}
-            />
-          ))}
-        </div>
-      )}
+      <div className="posts-list">
+        {posts.map(post => (
+          <Post 
+            key={post._id} 
+            post={post}
+            onUpdate={fetchPosts}
+          />
+        ))}
+      </div>
     </div>
   );
 };
