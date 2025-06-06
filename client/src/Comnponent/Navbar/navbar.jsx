@@ -44,41 +44,33 @@ function Navbar({ handleslidein }) {
                     <Link to='/' className='nav-item nav-logo'>
                         <img src={logo} alt="logo" />
                     </Link>
-                    <Link to="/about" className="nav-item nav-btn res-nav">
-                        {translate('About')}
-                    </Link>
-                    <Link to="/products" className="nav-item nav-btn res-nav">
-                        {translate('Products')}
-                    </Link>
-                    <Link to="/teams" className="nav-item nav-btn res-nav">
-                        {translate('For Teams')}
-                    </Link>
-                    <form>
-                        <input 
-                            type="text" 
-                            placeholder={translate('Search...')} 
-                        />
-                        <img src={search} alt="search" width='18' className='search-icon' />
-                    </form>
+                    <div className="nav-links">
+                        <Link to="/products" className="nav-item nav-btn">
+                            {translate('Products')}
+                        </Link>
+                        <Link to="/teams" className="nav-item nav-btn">
+                            {translate('Teams')}
+                        </Link>
+                        <Link to="/about" className="nav-item nav-btn">
+                            {translate('About')}
+                        </Link>
+                    </div>
                 </div>
                 <div className="navbar-2">
-                    <LanguageSelector />
-                    {User === null ? (
-                        <Link to='/Auth' className='nav-item nav-links'>
-                            {translate('Log in')}
-                        </Link>
-                    ) : (
+                    <form>
+                        <input type="text" placeholder={translate('Search...')} />
+                        <img src={search} alt="search" width="18" className='search-icon' />
+                    </form>
+                    {User === null ?
+                        <Link to='/Auth' className='nav-item nav-links nav-btn'>{translate('Log in')}</Link> :
                         <>
-                            <Avatar backgroundColor='#009dff' px='10px' py='7px' borderRadius='50%' color="white">
-                                <Link to={`/Users/${User?.result?._id}`} style={{ color: "white", textDecoration: "none" }}>
-                                {User.result.name.charAt(0).toUpperCase()}
-                                </Link>
+                            <Avatar backgroundColor='#009dff' px='12px' py='7px' borderRadius='50%' color='white'>
+                                <Link to={`/Users/${User?.result?._id}`} style={{ color: 'white', textDecoration: 'none' }}>{User.result.name.charAt(0).toUpperCase()}</Link>
                             </Avatar>
-                            <button className="nav-item nav-links" onClick={handlelogout}>
-                                {translate('Logout')}
-                            </button>
+                            <button className='nav-item nav-links nav-btn' onClick={handlelogout}>{translate('Log out')}</button>
                         </>
-                    )}
+                    }
+                    <LanguageSelector />
                 </div>
             </div>
         </nav>
