@@ -15,8 +15,9 @@ export const useLanguage = () => {
 export const LanguageProvider = ({ children }) => {
   const [currentLanguage, setCurrentLanguage] = useState('en');
   const [loading, setLoading] = useState(false);
+  const [verificationId, setVerificationId] = useState(null);
 
-  const verifyLanguageChange = async (newLanguage) => {
+  const initiateVerification = async (newLanguage) => {
     const verificationType = languages[newLanguage].verification;
     const currentUser = JSON.parse(localStorage.getItem('Profile'))?.result;
 
@@ -24,23 +25,47 @@ export const LanguageProvider = ({ children }) => {
       return { success: false, message: 'Please log in first' };
     }
 
+    if (verificationType === 'none') {
+      return { success: true };
+    }
+
     setLoading(true);
     try {
-      if (verificationType === 'email') {
-        // Send email verification
-        const response = await axios.post('/api/users/verify-email', {
-          email: currentUser.email,
-          language: newLanguage
-        });
-        return { success: true, verification: 'email', ...response.data };
-      } else {
-        // Send SMS verification
-        const response = await axios.post('/api/users/verify-phone', {
-          phone: currentUser.phoneNumber,
-          language: newLanguage
-        });
-        return { success: true, verification: 'sms', ...response.data };
-      }
+      const endpoint = verificationType === 'email' ? '/verify-email' : '/verify-phone';
+      const payload = {
+        language: newLanguage,
+        ...(verificationType === 'email' ? { email: currentUser.email } : { phone: currentUser.phone })
+      };
+
+      const response = await axios.post(`/api/language${endpoint}`, payload);
+      setVerificationId(response.data.verificationId);
+      return { success: true, message: `Verification code sent to your ${verificationType}` };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to send verification code' 
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyAndChangeLanguage = async (code, newLanguage) => {
+    if (!verificationId) {
+      return { success: false, message: 'Please initiate verification first' };
+    }
+
+    setLoading(true);
+    try {
+      await axios.post('/api/language/verify-code', {
+        code,
+        verificationId,
+        language: newLanguage
+      });
+
+      setCurrentLanguage(newLanguage);
+      localStorage.setItem('preferredLanguage', newLanguage);
+      return { success: true, message: 'Language changed successfully' };
     } catch (error) {
       return { 
         success: false, 
@@ -48,50 +73,29 @@ export const LanguageProvider = ({ children }) => {
       };
     } finally {
       setLoading(false);
+      setVerificationId(null);
     }
-  };
-
-  const verifyCode = async (code, verificationId, newLanguage) => {
-    try {
-      const response = await axios.post('/api/users/verify-code', {
-        code,
-        verificationId,
-        language: newLanguage
-      });
-
-      if (response.data.success) {
-        setCurrentLanguage(newLanguage);
-        localStorage.setItem('language', newLanguage);
-      }
-
-      return response.data;
-    } catch (error) {
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Invalid verification code' 
-      };
-    }
-  };
-
-  const translate = (key) => {
-    return languages[currentLanguage]?.translations[key] || key;
   };
 
   useEffect(() => {
-    const savedLanguage = localStorage.getItem('language');
+    const savedLanguage = localStorage.getItem('preferredLanguage');
     if (savedLanguage && languages[savedLanguage]) {
       setCurrentLanguage(savedLanguage);
     }
   }, []);
 
+  const translate = (key) => {
+    return languages[currentLanguage]?.translations[key] || languages.en.translations[key] || key;
+  };
+
   return (
     <LanguageContext.Provider value={{
       currentLanguage,
       languages,
+      loading,
       translate,
-      verifyLanguageChange,
-      verifyCode,
-      loading
+      initiateVerification,
+      verifyAndChangeLanguage
     }}>
       {children}
     </LanguageContext.Provider>

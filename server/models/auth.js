@@ -13,6 +13,9 @@ import mongoose from "mongoose";
         type: String,
         default: 'https://www.gravatar.com/avatar/?d=identicon'
     },
+    avatarPublicId: {
+        type: String
+    },
     friends: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
