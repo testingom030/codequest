@@ -4,6 +4,7 @@ import cors from "cors"
 import dotenv from "dotenv"
 import path from "path"
 import { fileURLToPath } from 'url'
+import { MongoClient, ServerApiVersion } from 'mongodb'
 import userroutes from "./routes/user.js"
 import questionroutes from "./routes/question.js"
 import answerroutes from "./routes/answer.js"
@@ -63,21 +64,40 @@ const PORT = process.env.PORT || 5000
 const database_url = process.env.MONGODB_URL
 
 // Enhanced MongoDB connection for serverless
+let cachedClient = null;
 let cachedDb = null;
 
 async function connectToDatabase() {
-    if (cachedDb) {
-        return cachedDb;
+    if (cachedClient && cachedDb) {
+        return { client: cachedClient, db: cachedDb };
     }
     
     try {
+        // Create a MongoClient with a MongoClientOptions object to set the Stable API version
+        const client = new MongoClient(database_url, {
+            serverApi: {
+                version: ServerApiVersion.v1,
+                strict: true,
+                deprecationErrors: true,
+            }
+        });
+
+        // Connect the client to the server
+        await client.connect();
+        
+        // Send a ping to confirm a successful connection
+        await client.db("admin").command({ ping: 1 });
+        console.log("✅ Pinged your deployment. Successfully connected to MongoDB!");
+        
         const db = await mongoose.connect(database_url, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });
+
+        cachedClient = client;
         cachedDb = db;
-        console.log('✅ MongoDB connected successfully');
-        return db;
+        
+        return { client, db };
     } catch (error) {
         console.error('❌ MongoDB connection error:', error);
         throw error;
