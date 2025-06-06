@@ -29,12 +29,23 @@ app.use(cors({
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-    const mongoStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
-    res.json({ 
-        status: 'ok',
-        mongodb: mongoStatus
-    });
+app.get('/health', async (req, res) => {
+    try {
+        await connectToDatabase();
+        const mongoStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+        res.json({ 
+            status: 'ok',
+            mongodb: mongoStatus,
+            env: process.env.NODE_ENV || 'not set',
+            hasMongoUrl: !!process.env.MONGODB_URL
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            status: 'error',
+            mongodb: 'error',
+            message: error.message
+        });
+    }
 });
 
 app.use("/user", userroutes);
@@ -51,18 +62,37 @@ app.get('/', (req, res) => {
 const PORT = process.env.PORT || 5000
 const database_url = process.env.MONGODB_URL
 
-mongoose.connect(database_url, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
+// Enhanced MongoDB connection for serverless
+let cachedDb = null;
+
+async function connectToDatabase() {
+    if (cachedDb) {
+        return cachedDb;
+    }
+    
+    try {
+        const db = await mongoose.connect(database_url, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
+        cachedDb = db;
+        console.log('✅ MongoDB connected successfully');
+        return db;
+    } catch (error) {
+        console.error('❌ MongoDB connection error:', error);
+        throw error;
+    }
+}
+
+// Connect to MongoDB
+connectToDatabase()
     .then(() => {
-        console.log('Connected to MongoDB successfully');
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });
     })
     .catch((err) => {
-        console.error('Error connecting to MongoDB:', err.message);
+        console.error('Error in initial connection:', err);
     });
 
 // Export the Express API for Vercel
