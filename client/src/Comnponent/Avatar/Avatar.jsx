@@ -1,26 +1,32 @@
-import React from 'react'
+import React from 'react';
+import './Avatar.css';
 
-function Avatar({
-    children,
-    backgroundColor,
-    px,
-    py,
+const Avatar = ({ user, size = '40', backgroundColor, color = 'white', fontSize }) => {
+  const style = {
+    backgroundColor: backgroundColor || '#1877f2',
     color,
-    borderRadius,fontSize,cursor
-}) {
-    const style={
-        backgroundColor,
-        padding:`${py} ${px}`,
-        color:color|| "black",
-        borderRadius,
-        fontSize,
-        textAlign:"center",
-        cursor:cursor || null,
-        textDecoration:"none"
-    };
-  return (
-    <div style={style}>{children}</div>
-  )
-}
+    width: `${size}px`,
+    height: `${size}px`,
+    fontSize: fontSize || `${parseInt(size) * 0.4}px`,
+  };
 
-export default Avatar
+  return (
+    <div className="avatar" style={style}>
+      {user?.avatar ? (
+        <img 
+          src={user.avatar} 
+          alt={user.name} 
+          onError={(e) => {
+            e.target.onerror = null;
+            e.currentTarget.style.display = 'none';
+            e.currentTarget.parentElement.textContent = user.name.charAt(0).toUpperCase();
+          }}
+        />
+      ) : (
+        user.name.charAt(0).toUpperCase()
+      )}
+    </div>
+  );
+};
+
+export default Avatar;

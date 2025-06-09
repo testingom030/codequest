@@ -59,13 +59,21 @@ const Post = ({ post, onUpdate }) => {
     if (post.image) {
       return (
         <div className="post-media">
-          <img src={post.image} alt="Post content" loading="lazy" />
+          <img 
+            src={post.image} 
+            alt="Post content" 
+            loading="lazy"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = 'https://via.placeholder.com/400x300?text=Image+not+available';
+            }}
+          />
         </div>
       );
     } else if (post.video) {
       return (
         <div className="post-media">
-          <video controls>
+          <video controls playsInline>
             <source src={post.video} type="video/mp4" />
             {translate('Your browser does not support the video tag.')}
           </video>
@@ -79,15 +87,7 @@ const Post = ({ post, onUpdate }) => {
     <div className="post">
       <div className="post-header">
         <div className="post-user">
-          <Avatar 
-            backgroundColor="purple" 
-            px="5px" 
-            py="3px"
-            borderRadius="50%"
-            color="white"
-          >
-            {post.user.name.charAt(0).toUpperCase()}
-          </Avatar>
+          <Avatar user={post.user} size="40" />
           <div className="user-info">
             <h4>{post.user.name}</h4>
             <small>{moment(post.createdAt).fromNow()}</small>
@@ -106,11 +106,15 @@ const Post = ({ post, onUpdate }) => {
         <button 
           className={`action-btn ${post.likes.includes(user?.result?._id) ? 'liked' : ''}`}
           onClick={handleLike}
+          disabled={isSubmitting}
         >
           <i className="fas fa-heart"></i>
           <span>{post.likes.length} {translate('Likes')}</span>
         </button>
-        <button className="action-btn" onClick={() => setIsExpanded(!isExpanded)}>
+        <button 
+          className="action-btn"
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
           <i className="fas fa-comment"></i>
           <span>{post.comments.length} {translate('Comments')}</span>
         </button>
@@ -126,8 +130,16 @@ const Post = ({ post, onUpdate }) => {
               onChange={(e) => setComment(e.target.value)}
               disabled={isSubmitting}
             />
-            <button type="submit" disabled={!comment.trim() || isSubmitting}>
-              {isSubmitting ? translate('Posting...') : translate('Post')}
+            <button 
+              type="submit" 
+              disabled={!comment.trim() || isSubmitting}
+              className={isSubmitting ? 'submitting' : ''}
+            >
+              {isSubmitting ? (
+                <span className="spinner"></span>
+              ) : (
+                translate('Post')
+              )}
             </button>
           </form>
           
@@ -135,15 +147,9 @@ const Post = ({ post, onUpdate }) => {
             {post.comments.map((comment, index) => (
               <div key={index} className="comment">
                 <Avatar 
-                  backgroundColor="purple" 
-                  px="5px" 
-                  py="3px"
-                  borderRadius="50%"
-                  color="white"
-                  fontSize="12px"
-                >
-                  {comment.user.name.charAt(0).toUpperCase()}
-                </Avatar>
+                  user={comment.user}
+                  size="32"
+                />
                 <div className="comment-content">
                   <h5>{comment.user.name}</h5>
                   <p>{comment.text}</p>
