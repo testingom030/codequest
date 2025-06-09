@@ -49,9 +49,28 @@ export const createPost = async (req, res) => {
 // Fetch posts
 export const getPosts = async (req, res) => {
     try {
-        const posts = await Post.find().populate('user', 'name avatar').sort({ createdAt: -1 });
+        const user = await User.findById(req.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Get posts from friends and the user's own posts
+        const posts = await Post.find({
+            $or: [
+                { user: req.userId },
+                { user: { $in: user.friends } }
+            ]
+        })
+        .populate('user', 'name avatar')
+        .populate({
+            path: 'comments.user',
+            select: 'name avatar'
+        })
+        .sort({ createdAt: -1 });
+
         res.status(200).json(posts);
     } catch (error) {
+        console.error('Fetch posts error:', error);
         res.status(500).json({ message: 'Something went wrong', error: error.message });
     }
 };

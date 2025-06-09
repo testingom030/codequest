@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLanguage } from '../../utils/LanguageContext';
+import { createPost } from '../../api';
 import './CreatePost.css';
 
 const CreatePost = ({ onPostCreated }) => {
@@ -37,35 +38,24 @@ const CreatePost = ({ onPostCreated }) => {
       return;
     }
 
-    setError('');
-    setIsSubmitting(true);
-    const formData = new FormData();
-    formData.append('content', content);
-    
-    if (media) {
-      formData.append('media', media);
+    if (!user?.result) {
+      setError(translate('Please log in to create a post'));
+      return;
     }
 
+    setError('');
+    setIsSubmitting(true);
+
     try {
-      const token = user?.result?.token || JSON.parse(localStorage.getItem('Profile'))?.token;
-      if (!token) {
-        throw new Error('Please log in to create a post');
-      }
+      const formData = new FormData();
+      formData.append('content', content);
       
-      const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/posts/create`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to create post');
+      if (media) {
+        formData.append('media', media);
       }
 
+      const { data } = await createPost(formData);
+      
       dispatch({ type: 'CREATE_POST', payload: data });
       if (onPostCreated) {
         onPostCreated(data);
@@ -74,7 +64,7 @@ const CreatePost = ({ onPostCreated }) => {
       setMedia(null);
     } catch (error) {
       console.error('Error creating post:', error);
-      setError(error.message || translate('Failed to create post'));
+      setError(error?.response?.data?.message || error.message || translate('Failed to create post'));
     } finally {
       setIsSubmitting(false);
     }

@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import PostsView from '../../Comnponent/Posts/PostsView';
 import CreatePost from '../../Comnponent/Posts/CreatePost';
 import FriendSearch from '../../Comnponent/Friends/FriendSearch';
+import { getFeedPosts } from '../../api';
 import './Feed.css';
 
 const Feed = () => {
@@ -13,27 +14,15 @@ const Feed = () => {
 
   const fetchPosts = async () => {
     try {
-      const token = user?.result?.token || JSON.parse(localStorage.getItem('Profile'))?.token;
-      if (!token) {
+      if (!user?.result) {
         throw new Error('Authentication required');
       }
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/posts/feed`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to fetch posts');
-      }
-
-      const data = await response.json();
+      const { data } = await getFeedPosts();
       setPosts(data);
     } catch (err) {
       console.error('Error fetching posts:', err);
-      setError(err.message);
+      setError(err?.response?.data?.message || err.message || 'Failed to fetch posts');
     } finally {
       setLoading(false);
     }

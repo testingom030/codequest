@@ -6,6 +6,10 @@ const postSchema = mongoose.Schema({
         ref: 'User',
         required: true
     },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
     content: {
         type: String,
         required: true

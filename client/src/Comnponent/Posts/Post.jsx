@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import Avatar from '../Avatar/Avatar';
 import { useLanguage } from '../../utils/LanguageContext';
+import { likePost, commentPost } from '../../api';
 import moment from 'moment';
 import './Post.css';
 
@@ -9,32 +10,24 @@ const Post = ({ post, onUpdate }) => {
   const [comment, setComment] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const { translate } = useLanguage();
   const user = useSelector(state => state.currentuserreducer);
 
   const handleLike = async () => {
     try {
-      const token = user?.result?.token || JSON.parse(localStorage.getItem('Profile'))?.token;
-      if (!token) {
-        throw new Error('Please log in to like posts');
+      if (!user?.result) {
+        setError('Please log in to like posts');
+        return;
       }
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/posts/${post._id}/like`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to like post');
-      }
-
+      await likePost(post._id);
       if (onUpdate) {
         onUpdate();
       }
     } catch (error) {
       console.error('Error liking post:', error);
+      setError(error?.response?.data?.message || 'Failed to like post');
     }
   };
 
@@ -42,35 +35,29 @@ const Post = ({ post, onUpdate }) => {
     e.preventDefault();
     if (!comment.trim()) return;
 
+    if (!user?.result) {
+      setError('Please log in to comment');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      const token = user?.result?.token || JSON.parse(localStorage.getItem('Profile'))?.token;
-      if (!token) {
-        throw new Error('Please log in to comment');
-      }
-
-      const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/posts/${post._id}/comment`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ text: comment })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to add comment');
-      }
-
+      await commentPost(post._id, { text: comment });
       setComment('');
       if (onUpdate) {
         onUpdate();
       }
     } catch (error) {
       console.error('Error commenting:', error);
+      setError(error?.response?.data?.message || 'Failed to add comment');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const getMediaUrl = (path) => {
+    if (!path) return null;
+    return path.startsWith('http') ? path : `${process.env.REACT_APP_API_URL}/${path}`;
   };
 
   return (
@@ -97,15 +84,17 @@ const Post = ({ post, onUpdate }) => {
         <p>{post.content}</p>
         {post.image && (
           <div className="post-media">
-            <img src={`${process.env.REACT_APP_API_URL || ''}/${post.image}`} alt="Post" />
+            <img src={getMediaUrl(post.image)} alt="Post content" loading="lazy" />
           </div>
         )}
         {post.video && (
           <div className="post-media">
-            <video src={`${process.env.REACT_APP_API_URL || ''}/${post.video}`} controls />
+            <video src={getMediaUrl(post.video)} controls />
           </div>
         )}
       </div>
+
+      {error && <p className="error-message">{error}</p>}
 
       <div className="post-actions">
         <button 

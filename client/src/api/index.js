@@ -1,7 +1,10 @@
 import axios from "axios";
 
 const API=axios.create({
-    baseURL: process.env.REACT_APP_API_URL || "https://code-quest-flame.vercel.app"
+    baseURL: process.env.REACT_APP_API_URL || "https://code-quest-flame.vercel.app",
+    headers: {
+        'Content-Type': 'application/json'
+    }
 });
 
 API.interceptors.request.use((req)=>{
@@ -35,7 +38,15 @@ export const postanswer=(id,noofanswers,answerbody,useranswered,userid)=>API.pat
 export const deleteanswer=(id,answerid,noofanswers)=>API.patch(`/answer/delete/${id}`,{answerid,noofanswers});
 
 // Posts API calls
-export const createPost = (postData) => API.post('/posts/create', postData);
-export const getPosts = () => API.get('/posts/feed');
+export const createPost = (postData) => {
+    const config = {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    };
+    return API.post('/posts/create', postData, config);
+};
+
+export const getFeedPosts = () => API.get('/posts/feed');
 export const likePost = (postId) => API.post(`/posts/${postId}/like`);
 export const commentPost = (postId, commentData) => API.post(`/posts/${postId}/comment`, commentData);
