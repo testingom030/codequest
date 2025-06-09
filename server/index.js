@@ -69,67 +69,57 @@ app.use('/language', languageRoutes);
 const PORT = process.env.PORT || 3001
 const database_url = process.env.MONGODB_URL
 
-// MongoDB Connection with improved settings
-const mongoOptions = {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverApi: {
-        version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors: true,
-    },
-    maxPoolSize: 10,
-    serverSelectionTimeoutMS: 30000, // Increased from 5000
-    socketTimeoutMS: 75000, // Increased from 45000
-    family: 4,  // Force IPv4
-    keepAlive: true,
-    keepAliveInitialDelay: 300000
-};
+// MongoDB Connection with final optimized settings
+const connectDB = async () => {
+    try {
+        const mongoOptions = {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            serverApi: {
+                version: ServerApiVersion.v1,
+                strict: true,
+                deprecationErrors: true,
+            },
+            maxPoolSize: 50,
+            wtimeoutMS: 2500,
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
+            family: 4,
+            keepAlive: true,
+            keepAliveInitialDelay: 300000,
+            autoIndex: false, // Don't build indexes
+            maxTimeMS: 60000 // Maximum time for operations
+        };
 
-// Connect to MongoDB before starting the server
-mongoose.connect(process.env.MONGODB_URL, mongoOptions)
-    .then(() => {
-        console.log('Connected to MongoDB Atlas');
+        await mongoose.connect(process.env.MONGODB_URL, mongoOptions);
+        console.log('MongoDB Connected...');
+        
+        // Start server only after DB connection
         const PORT = process.env.PORT || 3001;
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });
-    })
-    .catch(err => {
-        console.error('MongoDB connection error:', err);
-        process.exit(1);
-    });
-
-// Connection error handling
-mongoose.connection.on('error', (err) => {
-    console.error('MongoDB connection error:', err);
-});
-
-mongoose.connection.on('disconnected', () => {
-    console.log('MongoDB disconnected');
-});
-
-process.on('SIGINT', async () => {
-    try {
-        await mongoose.connection.close();
-        console.log('MongoDB connection closed through app termination');
-        process.exit(0);
     } catch (err) {
-        console.error('Error closing MongoDB connection:', err);
-        process.exit(1);
+        console.error('MongoDB connection error:', err);
+        // Wait 5 seconds before retrying
+        setTimeout(connectDB, 5000);
     }
+};
+
+// Initial connection
+connectDB();
+
+// Handle connection errors
+mongoose.connection.on('error', err => {
+    console.error('MongoDB connection error:', err);
+    setTimeout(connectDB, 5000);
 });
 
-// Connect to MongoDB
-connectToDatabase()
-    .then(() => {
-        app.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
-        });
-    })
-    .catch((err) => {
-        console.error('Error in initial connection:', err);
-    });
+// Handle disconnection
+mongoose.connection.on('disconnected', () => {
+    console.log('MongoDB disconnected, trying to reconnect...');
+    setTimeout(connectDB, 5000);
+});
 
 // Request logging middleware
 app.use((req, res, next) => {
