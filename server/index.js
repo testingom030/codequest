@@ -20,13 +20,13 @@ dotenv.config();
 app.use(express.json({ limit: "30mb", extended: true }))
 app.use(express.urlencoded({ limit: "30mb", extended: true }))
 // Configure CORS
-app.use(cors({
-    origin: function(origin, callback) {
+app.use(cors({    origin: function(origin, callback) {
         const allowedOrigins = [
             'https://code-quest-frontend-sigma.vercel.app',
             'http://localhost:3000',
             'https://code-quest-flame.vercel.app',
-            'https://code-quest-frontend.vercel.app'
+            'https://code-quest-frontend.vercel.app',
+            'https://client-ppy5xjp0a-aimls-projects-a90948ce.vercel.app'
         ];
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
