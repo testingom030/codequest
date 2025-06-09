@@ -125,9 +125,12 @@ app.use(async (req, res, next) => {
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverApi: ServerApiVersion.v1
+    serverApi: ServerApiVersion.v1,
+    retryWrites: true,
+    w: 'majority',
+    keepAlive: true,
+    connectTimeoutMS: 30000,
+    socketTimeoutMS: 30000
 })
 .then(() => {
     console.log('Connected to MongoDB Atlas');
@@ -206,6 +209,30 @@ process.on('unhandledRejection', (reason, promise) => {
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
     process.exit(1);
+});
+
+// MongoDB connection test endpoint
+app.get('/mongodb-test', async (req, res) => {
+    try {
+        // Test the MongoDB connection
+        const dbStatus = mongoose.connection.readyState;
+        const status = {
+            0: 'disconnected',
+            1: 'connected',
+            2: 'connecting',
+            3: 'disconnecting'
+        };
+        res.json({
+            mongoDBConnection: status[dbStatus],
+            database: mongoose.connection.name,
+            host: mongoose.connection.host
+        });
+    } catch (error) {
+        res.status(500).json({
+            error: 'MongoDB connection test failed',
+            details: error.message
+        });
+    }
 });
 
 // Export the Express API for Vercel
