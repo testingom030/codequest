@@ -1,11 +1,7 @@
-imp    baseURL: process.env.REACT_APP_API_URL || "https://backend-fsfowzhwc-aimls-projects-a90948ce.vercel.app",
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    },xios from "axios";
+import axios from "axios";
 
 const API = axios.create({
-    baseURL: process.env.REACT_APP_API_URL || "https://backend-pqdzan1zs-aimls-projects-a90948ce.vercel.app",
+    baseURL: process.env.REACT_APP_API_URL || "https://backend-opgobbzkx-aimls-projects-a90948ce.vercel.app",
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
