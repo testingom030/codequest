@@ -69,55 +69,45 @@ app.use('/language', languageRoutes);
 const PORT = process.env.PORT || 3001
 const database_url = process.env.MONGODB_URL
 
-// MongoDB Connection with final optimized settings
+// MongoDB Connection Setup
 const connectDB = async () => {
     try {
         const mongoOptions = {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
             serverApi: {
                 version: ServerApiVersion.v1,
                 strict: true,
                 deprecationErrors: true,
             },
             maxPoolSize: 50,
-            wtimeoutMS: 2500,
-            serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000,
-            family: 4,
-            keepAlive: true,
-            keepAliveInitialDelay: 300000,
-            autoIndex: false, // Don't build indexes
-            maxTimeMS: 60000 // Maximum time for operations
+            connectTimeoutMS: 30000,
+            socketTimeoutMS: 45000
         };
 
         await mongoose.connect(process.env.MONGODB_URL, mongoOptions);
-        console.log('MongoDB Connected...');
+        console.log('✅ MongoDB Connected Successfully');
         
-        // Start server only after DB connection
-        const PORT = process.env.PORT || 3001;
+        // Only start server after successful DB connection
+        const PORT = process.env.PORT || 5000;
         app.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
+            console.log(`🚀 Server running on port ${PORT}`);
         });
     } catch (err) {
-        console.error('MongoDB connection error:', err);
-        // Wait 5 seconds before retrying
-        setTimeout(connectDB, 5000);
+        console.error('❌ MongoDB Connection Error:', err);
+        // Exit process with failure
+        process.exit(1);
     }
 };
 
-// Initial connection
+// Initialize Database Connection
 connectDB();
 
 // Handle connection errors
 mongoose.connection.on('error', err => {
     console.error('MongoDB connection error:', err);
-    setTimeout(connectDB, 5000);
 });
 
-// Handle disconnection
 mongoose.connection.on('disconnected', () => {
-    console.log('MongoDB disconnected, trying to reconnect...');
+    console.log('MongoDB disconnected, attempting to reconnect...');
     setTimeout(connectDB, 5000);
 });
 
