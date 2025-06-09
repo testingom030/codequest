@@ -123,15 +123,37 @@ app.use(async (req, res, next) => {
     }
 });
 
-// Error handling for MongoDB connection issues
-mongoose.connection.on('error', (error) => {
-    console.error('MongoDB connection error:', error);
-    isConnected = false;
+// MongoDB Connection
+mongoose.connect(process.env.MONGODB_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverApi: ServerApiVersion.v1
+})
+.then(() => {
+    console.log('Connected to MongoDB Atlas');
+})
+.catch((error) => {
+    console.error('Error connecting to MongoDB:', error.message);
+});
+
+// Connection error handling
+mongoose.connection.on('error', (err) => {
+    console.error('MongoDB connection error:', err);
 });
 
 mongoose.connection.on('disconnected', () => {
     console.log('MongoDB disconnected');
-    isConnected = false;
+});
+
+process.on('SIGINT', async () => {
+    try {
+        await mongoose.connection.close();
+        console.log('MongoDB connection closed through app termination');
+        process.exit(0);
+    } catch (err) {
+        console.error('Error closing MongoDB connection:', err);
+        process.exit(1);
+    }
 });
 
 // Connect to MongoDB
@@ -145,6 +167,23 @@ connectToDatabase()
         console.error('Error in initial connection:', err);
     });
 
+// Request logging middleware
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    next();
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Error:', err);
+    res.status(err.status || 500).json({
+        error: {
+            message: err.message || 'Internal Server Error',
+            ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+        }
+    });
+});
+
 // Global error handling middleware
 app.use((err, req, res, next) => {
     console.error('Error:', err.message);
@@ -155,16 +194,6 @@ app.use((err, req, res, next) => {
         status: 'error',
         message: err.message || 'Internal Server Error',
         stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-    });
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
-        success: false,
-        message: 'Internal Server Error',
-        error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
 });
 
