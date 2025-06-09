@@ -4,14 +4,16 @@ import User from '../models/auth.js';
 // Create a new post
 export const createPost = async (req, res) => {
     try {
+        console.log('Creating post for user:', req.userId);
+        
         const user = await User.findById(req.userId);
-
         if (!user) {
+            console.error('User not found:', req.userId);
             return res.status(404).json({ message: 'User not found' });
         }
 
         // Check posting restrictions
-        const friendCount = user.friends.length;
+        const friendCount = user.friends?.length || 0;
         const today = new Date().setHours(0, 0, 0, 0);
 
         if (user.lastPostDate && new Date(user.lastPostDate).setHours(0, 0, 0, 0) === today) {
@@ -22,11 +24,18 @@ export const createPost = async (req, res) => {
             user.postCount = 0;
         }
 
+        let mediaPath = null;
+        if (req.file) {
+            mediaPath = req.file.path.replace(/\\/g, '/'); // Convert Windows path to URL path
+            if (!mediaPath.startsWith('uploads/')) {
+                mediaPath = 'uploads/' + mediaPath;
+            }
+        }
+
         const post = new Post({
             user: req.userId,
             content: req.body.content,
-            image: req.file?.path, // Use uploaded file path if exists
-            video: req.body.video
+            [req.file?.mimetype.startsWith('image/') ? 'image' : 'video']: mediaPath
         });
 
         await post.save();
