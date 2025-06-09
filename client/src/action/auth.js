@@ -4,25 +4,32 @@ import { fetchallusers } from './users';
 export const signup =(authdata,navigate)=> async(dispatch)=>{
     try {
         const{data}=await api.signup(authdata);
-        dispatch({type:"AUTH",data})
-        dispatch(setcurrentuser(JSON.parse(localStorage.getItem("Profile"))));
-        dispatch(fetchallusers())
-        navigate("/")
-        return { success: true }
+
+        if (data.success) {
+            // Don't dispatch SET_CURRENT_USER yet, wait for OTP verification
+            return { success: true };
+        }
+        return { success: false, error: data.message };
     } catch (error) {
-        const errorMessage = error.response?.data?.message || "Something went wrong..."
-        return { success: false, error: errorMessage }
+        return { 
+            success: false, 
+            error: error.response?.data?.message || 'Something went wrong!'
+        };
     }
 }
-export const login =(authdata,navigate)=> async(dispatch)=>{
+export const verifyOtp = (verificationData) => async (dispatch) => {
     try {
-        const{data}=await api.login(authdata);
-        dispatch({type:"AUTH",data})
-        dispatch(setcurrentuser(JSON.parse(localStorage.getItem("Profile"))));
-        navigate("/")
-        return { success: true }
+        const { data } = await api.verifyOtp(verificationData);
+
+        if (data.success) {
+            dispatch({ type: 'SET_CURRENT_USER', payload: data.result });
+            return { success: true };
+        }
+        return { success: false, error: data.message };
     } catch (error) {
-        const errorMessage = error.response?.data?.message || "Invalid credentials"
-        return { success: false, error: errorMessage }
+        return {
+            success: false,
+            error: error.response?.data?.message || 'OTP verification failed!'
+        };
     }
 }
