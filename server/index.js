@@ -48,23 +48,12 @@ app.options('*', cors());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Health check endpoint
-app.get('/health', async (req, res) => {
-    try {
-        await connectToDatabase();
-        const mongoStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
-        res.json({ 
-            status: 'ok',
-            mongodb: mongoStatus,
-            env: process.env.NODE_ENV || 'not set',
-            hasMongoUrl: !!process.env.MONGODB_URL
-        });
-    } catch (error) {
-        res.status(500).json({ 
-            status: 'error',
-            mongodb: 'error',
-            message: error.message
-        });
-    }
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', message: 'Server is running' });
+});
+
+app.get('/', (req, res) => {
+    res.json({ message: 'Welcome to CodeQuest API' });
 });
 
 app.post('/debug/echo', (req, res) => {
@@ -84,10 +73,6 @@ app.use('/answer', answerroutes);
 app.use('/avatar', avatarRoutes);
 app.use('/posts', postRoutes);
 app.use('/language', languageRoutes);
-
-app.get('/', (req, res) => {
-    res.send("Codequest is running perfect")
-})
 
 const PORT = process.env.PORT || 3001
 const database_url = process.env.MONGODB_URL
@@ -175,11 +160,11 @@ app.use((err, req, res, next) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('Global error handler:', err);
-    res.status(err.status || 500).json({
-        message: err.message || 'Internal server error',
+    console.error(err.stack);
+    res.status(500).json({
         success: false,
-        error: process.env.NODE_ENV === 'development' ? err : undefined
+        message: 'Internal Server Error',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
 });
 
