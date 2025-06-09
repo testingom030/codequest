@@ -3,8 +3,10 @@ import axios from "axios";
 const API = axios.create({
     baseURL: process.env.REACT_APP_API_URL || "https://code-quest-flame.vercel.app",
     headers: {
-        'Content-Type': 'application/json'
-    }
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    },
+    withCredentials: true
 });
 
 // Add response interceptor for better error handling

@@ -19,12 +19,29 @@ const app = express();
 dotenv.config();
 app.use(express.json({ limit: "30mb", extended: true }))
 app.use(express.urlencoded({ limit: "30mb", extended: true }))
-// Configure CORS
+// Configure CORS with more specific options
 app.use(cors({
-    origin: ['https://code-quest-frontend-sigma.vercel.app', 'http://localhost:3000', 'https://code-quest-flame.vercel.app'],
+    origin: function(origin, callback) {
+        const allowedOrigins = [
+            'https://code-quest-frontend-sigma.vercel.app',
+            'http://localhost:3000',
+            'https://code-quest-flame.vercel.app',
+            'https://code-quest-frontend.vercel.app'
+        ];
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range']
 }));
+
+// Handle preflight requests
+app.options('*', cors());
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -125,6 +142,19 @@ connectToDatabase()
     .catch((err) => {
         console.error('Error in initial connection:', err);
     });
+
+// Global error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Error:', err.message);
+    console.error('Stack:', err.stack);
+    
+    // Return error response
+    res.status(err.status || 500).json({
+        status: 'error',
+        message: err.message || 'Internal Server Error',
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+});
 
 // Export the Express API for Vercel
 export default app;
