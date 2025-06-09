@@ -21,7 +21,11 @@ app.use(express.json({ limit: "30mb", extended: true }))
 app.use(express.urlencoded({ limit: "30mb", extended: true }))
 // Configure CORS
 app.use(cors({
-    origin: '*',
+    origin: [
+        'http://localhost:3000',
+        'https://client-beta-amber.vercel.app',
+        'https://backend-sigma-ashen-62.vercel.app'
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
