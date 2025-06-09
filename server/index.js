@@ -128,9 +128,9 @@ mongoose.connect(process.env.MONGODB_URL, {
     serverApi: ServerApiVersion.v1,
     retryWrites: true,
     w: 'majority',
-    keepAlive: true,
-    connectTimeoutMS: 30000,
-    socketTimeoutMS: 30000
+    socketTimeoutMS: 30000,
+    maxPoolSize: 10,
+    family: 4
 })
 .then(() => {
     console.log('Connected to MongoDB Atlas');
