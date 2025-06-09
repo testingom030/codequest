@@ -7,36 +7,44 @@ const API = axios.create({
         'Accept': 'application/json'
     },
     withCredentials: true,
-    timeout: 10000 // 10 second timeout
+    timeout: 15000, // Increased timeout
+    retry: 3, // Number of retry attempts
+    retryDelay: 1000 // Delay between retries in milliseconds
+});
+
+// Add request interceptor for authentication
+API.interceptors.request.use((req) => {
+    if (localStorage.getItem("Profile")) {
+        req.headers.Authorization = `Bearer ${JSON.parse(localStorage.getItem("Profile")).token}`;
+    }
+    return req;
 });
 
 // Add response interceptor for better error handling
 API.interceptors.response.use(
     (response) => response,
-    (error) => {
-        // Handle response errors
-        if (error.response) {
-            // Server responded with a status code that falls out of the range of 2xx
-            return Promise.reject(error.response.data);
-        } else if (error.request) {
-            // The request was made but no response was received
-            return Promise.reject({ message: 'No response from server' });
-        } else {
-            // Something happened in setting up the request that triggered an Error
-            return Promise.reject({ message: error.message });
+    async (error) => {
+        const { config, response: { status } } = error;
+        
+        // Retry the request if it failed due to network issues
+        if (!config || !config.retry) return Promise.reject(error);
+        
+        if (status === 408 || status === 500) {
+            config.retryCount = config.retryCount || 0;
+            
+            if (config.retryCount >= config.retry) {
+                return Promise.reject(error);
+            }
+            
+            config.retryCount += 1;
+            return new Promise(resolve => {
+                setTimeout(() => resolve(API(config)), config.retryDelay || 1000);
+            });
         }
+        
+        return Promise.reject(error);
     }
 );
-
-// Add request interceptor for authentication
-API.interceptors.request.use((req) => {
-    if (localStorage.getItem("Profile")) {
-        req.headers.Authorization = `Bearer ${
-            JSON.parse(localStorage.getItem("Profile")).token
-        }`;
-    }
-    return req;
-})
 
 export const login = (authdata) => API.post("user/login", authdata);
 export const signup = (authdata) => API.post("user/signup", authdata);

@@ -69,67 +69,36 @@ app.use('/language', languageRoutes);
 const PORT = process.env.PORT || 3001
 const database_url = process.env.MONGODB_URL
 
-// Enhanced MongoDB connection handling for serverless environment
-let isConnected = false;
-
-const connectToDatabase = async () => {
-    if (isConnected) {
-        console.log('=> Using existing database connection');
-        return;
-    }
-
-    try {
-        const mongoOptions = {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-            serverApi: {
-                version: ServerApiVersion.v1,
-                strict: true,
-                deprecationErrors: true,
-            },
-            maxPoolSize: 10,
-            serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000,
-        };
-
-        await mongoose.connect(process.env.MONGODB_URL, mongoOptions);
-        isConnected = true;
-        console.log('=> Using new database connection');
-    } catch (error) {
-        console.error('Database connection error:', error);
-        throw error;
-    }
+// MongoDB Connection with improved settings
+const mongoOptions = {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+    },
+    maxPoolSize: 10,
+    serverSelectionTimeoutMS: 30000, // Increased from 5000
+    socketTimeoutMS: 75000, // Increased from 45000
+    family: 4,  // Force IPv4
+    keepAlive: true,
+    keepAliveInitialDelay: 300000
 };
 
-// Connect to MongoDB before handling routes
-app.use(async (req, res, next) => {
-    try {
-        await connectToDatabase();
-        next();
-    } catch (error) {
-        console.error('Database connection middleware error:', error);
-        res.status(500).json({ 
-            message: 'Database connection failed', 
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+// Connect to MongoDB before starting the server
+mongoose.connect(process.env.MONGODB_URL, mongoOptions)
+    .then(() => {
+        console.log('Connected to MongoDB Atlas');
+        const PORT = process.env.PORT || 3001;
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
         });
-    }
-});
-
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URL, {
-    serverApi: ServerApiVersion.v1,
-    retryWrites: true,
-    w: 'majority',
-    socketTimeoutMS: 30000,
-    maxPoolSize: 10,
-    family: 4
-})
-.then(() => {
-    console.log('Connected to MongoDB Atlas');
-})
-.catch((error) => {
-    console.error('Error connecting to MongoDB:', error.message);
-});
+    })
+    .catch(err => {
+        console.error('MongoDB connection error:', err);
+        process.exit(1);
+    });
 
 // Connection error handling
 mongoose.connection.on('error', (err) => {
