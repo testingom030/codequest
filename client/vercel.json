@@ -1,15 +1,16 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "build/**",
-      "use": "@vercel/static"
-    }
-  ],
   "routes": [
+    { 
+      "src": "^/static/(.*)",
+      "dest": "/static/$1"
+    },
     {
       "src": "/(.*)",
-      "dest": "build/$1"
+      "dest": "/index.html"
     }
-  ]
+  ],
+  "env": {
+    "REACT_APP_API_URL": "https://backend-pxzerf5gy-aimls-projects-a90948ce.vercel.app"
+  }
 }
