@@ -127,7 +127,7 @@ const Teams = () => {
       <section className="join-team">
         <div className="join-content">
           <h2>{translate('Join Our Team')}</h2>
-          <p>{translate('We're always looking for talented individuals to join our mission.')}</p>
+          <p>{translate("We're always looking for talented individuals to join our mission.")}</p>
           <button className="join-button">
             {translate('View Open Positions')}
           </button>
