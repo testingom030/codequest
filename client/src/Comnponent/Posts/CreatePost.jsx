@@ -70,6 +70,34 @@ const CreatePost = ({ onPostCreated }) => {
     }
   };
 
+  const renderMediaPreview = () => {
+    if (!media) return null;
+
+    if (media.type.startsWith('image/')) {
+      return (
+        <div className="media-preview">
+          <img src={URL.createObjectURL(media)} alt="Preview" />
+          <button type="button" onClick={() => setMedia(null)} className="remove-media">
+            <i className="fas fa-times"></i>
+          </button>
+        </div>
+      );
+    } else if (media.type.startsWith('video/')) {
+      return (
+        <div className="media-preview">
+          <video controls>
+            <source src={URL.createObjectURL(media)} type={media.type} />
+            {translate('Your browser does not support the video tag.')}
+          </video>
+          <button type="button" onClick={() => setMedia(null)} className="remove-media">
+            <i className="fas fa-times"></i>
+          </button>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="create-post">
       <h3>{translate('Create Post')}</h3>
@@ -80,12 +108,13 @@ const CreatePost = ({ onPostCreated }) => {
           onChange={(e) => setContent(e.target.value)}
           required={!media}
           className={error ? 'error' : ''}
+          disabled={isSubmitting}
         />
         
         {error && <p className="error-message">{error}</p>}
         
         <div className="media-upload">
-          <label htmlFor="media-input" className="media-label">
+          <label htmlFor="media-input" className={`media-label ${isSubmitting ? 'disabled' : ''}`}>
             <i className="fas fa-image"></i>
             <span>{translate('Add Photo/Video')}</span>
           </label>
@@ -94,29 +123,15 @@ const CreatePost = ({ onPostCreated }) => {
             id="media-input"
             accept="image/*,video/*"
             onChange={handleMediaChange}
+            disabled={isSubmitting}
             style={{ display: 'none' }}
           />
-          {media && (
-            <div className="media-preview">
-              {media.type.startsWith('image/') ? (
-                <img src={URL.createObjectURL(media)} alt="Preview" />
-              ) : (
-                <video src={URL.createObjectURL(media)} controls />
-              )}
-              <button 
-                type="button" 
-                className="remove-media"
-                onClick={() => setMedia(null)}
-                aria-label={translate('Remove media')}
-              >
-                ×
-              </button>
-            </div>
-          )}
+          {renderMediaPreview()}
         </div>
+        
         <button 
           type="submit" 
-          className="post-btn" 
+          className="submit-post"
           disabled={isSubmitting || (!content.trim() && !media)}
         >
           {isSubmitting ? translate('Posting...') : translate('Post')}

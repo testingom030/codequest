@@ -55,9 +55,24 @@ const Post = ({ post, onUpdate }) => {
     }
   };
 
-  const getMediaUrl = (path) => {
-    if (!path) return null;
-    return path.startsWith('http') ? path : `${process.env.REACT_APP_API_URL}/${path}`;
+  const renderMedia = () => {
+    if (post.image) {
+      return (
+        <div className="post-media">
+          <img src={post.image} alt="Post content" loading="lazy" />
+        </div>
+      );
+    } else if (post.video) {
+      return (
+        <div className="post-media">
+          <video controls>
+            <source src={post.video} type="video/mp4" />
+            {translate('Your browser does not support the video tag.')}
+          </video>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -82,16 +97,7 @@ const Post = ({ post, onUpdate }) => {
 
       <div className="post-content">
         <p>{post.content}</p>
-        {post.image && (
-          <div className="post-media">
-            <img src={getMediaUrl(post.image)} alt="Post content" loading="lazy" />
-          </div>
-        )}
-        {post.video && (
-          <div className="post-media">
-            <video src={getMediaUrl(post.video)} controls />
-          </div>
-        )}
+        {renderMedia()}
       </div>
 
       {error && <p className="error-message">{error}</p>}

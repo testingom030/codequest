@@ -7,23 +7,8 @@ import { createPost, getPosts } from '../controller/post.js';
 
 const router = express.Router();
 
-// Ensure uploads directory exists
-const uploadDir = './uploads';
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const safeFilename = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
-        cb(null, `${uniqueSuffix}-${safeFilename}`);
-    }
-});
+// Use memory storage for multer since we're using Cloudinary
+const storage = multer.memoryStorage();
 
 const upload = multer({
     storage,

@@ -1,5 +1,25 @@
 import Post from '../models/Post.js';
 import User from '../models/auth.js';
+import cloudinary from '../config/cloudinary.js';
+import { Readable } from 'stream';
+
+// Helper function to upload buffer to Cloudinary
+const uploadToCloudinary = async (buffer, resourceType = 'image') => {
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            { resource_type: resourceType },
+            (error, result) => {
+                if (error) reject(error);
+                else resolve(result);
+            }
+        );
+
+        const readableStream = new Readable();
+        readableStream.push(buffer);
+        readableStream.push(null);
+        readableStream.pipe(uploadStream);
+    });
+};
 
 // Create a new post
 export const createPost = async (req, res) => {
@@ -24,18 +44,26 @@ export const createPost = async (req, res) => {
             user.postCount = 0;
         }
 
-        let mediaPath = null;
+        let mediaUrl = null;
+        let mediaType = null;
+
+        // Handle file upload to Cloudinary if present
         if (req.file) {
-            mediaPath = req.file.path.replace(/\\/g, '/'); // Convert Windows path to URL path
-            if (!mediaPath.startsWith('uploads/')) {
-                mediaPath = 'uploads/' + mediaPath;
+            try {
+                const resourceType = req.file.mimetype.startsWith('image/') ? 'image' : 'video';
+                const result = await uploadToCloudinary(req.file.buffer, resourceType);
+                mediaUrl = result.secure_url;
+                mediaType = resourceType;
+            } catch (uploadError) {
+                console.error('Cloudinary upload error:', uploadError);
+                return res.status(500).json({ message: 'Failed to upload media' });
             }
         }
 
         const post = new Post({
             user: req.userId,
             content: req.body.content,
-            [req.file?.mimetype.startsWith('image/') ? 'image' : 'video']: mediaPath
+            [mediaType === 'image' ? 'image' : 'video']: mediaUrl
         });
 
         await post.save();
