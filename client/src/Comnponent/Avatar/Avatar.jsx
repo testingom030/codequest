@@ -1,7 +1,11 @@
 import React from 'react';
 import './Avatar.css';
 
-const Avatar = ({ user, size = '40', backgroundColor, color = 'white', fontSize }) => {
+const Avatar = ({ user, size = '40', backgroundColor, color = 'white', fontSize, withBorder = false }) => {
+  if (!user) {
+    return null;
+  }
+
   const style = {
     backgroundColor: backgroundColor || '#1877f2',
     color,
@@ -10,9 +14,11 @@ const Avatar = ({ user, size = '40', backgroundColor, color = 'white', fontSize 
     fontSize: fontSize || `${parseInt(size) * 0.4}px`,
   };
 
+  const avatarClass = `avatar${withBorder ? ' with-border' : ''}`;
+
   return (
-    <div className="avatar" style={style}>
-      {user?.avatar ? (
+    <div className={avatarClass} style={style}>
+      {user.avatar ? (
         <img 
           src={user.avatar} 
           alt={user.name} 
