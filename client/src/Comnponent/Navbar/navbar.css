@@ -1,13 +1,13 @@
 .main-nav {
     min-height: 60px;
     width: 100%;
-    margin: 0% auto;
+    margin: 0;
     border-top: solid 3px #0a95ff;
     box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
     position: fixed;
-    z-index: 1000;
-    top: 0%;
-    left: 0%;
+    z-index: 2000; /* Increased z-index to ensure it's always on top */
+    top: 0;
+    left: 0;
     background-color: white;
     display: flex;
     justify-content: center;

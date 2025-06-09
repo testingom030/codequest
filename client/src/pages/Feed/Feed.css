@@ -1,10 +1,12 @@
 .feed-container {
   width: 100%;
   max-width: 1264px;
-  margin: 0 auto;
+  margin: 80px auto 0; /* Added top margin to account for fixed navbar */
   padding: 20px;
-  min-height: calc(100vh - 60px); /* Account for navbar height */
+  min-height: calc(100vh - 60px);
   background-color: #f8f9fa;
+  position: relative; /* Added for proper stacking context */
+  z-index: 1; /* Ensure content appears above potential overlays */
 }
 
 .feed-main {
