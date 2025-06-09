@@ -7,16 +7,33 @@ import { generateOTP, sendEmailOTP, sendSMSOTP } from '../utils/otp.js';
 const otpStore = new Map();
 
 export const signup = async (req, res) => {
-    console.log('Signup request received:', { ...req.body, password: '***' });
+    console.log('Signup request received:', { 
+        name: req.body.name,
+        email: req.body.email,
+        mobileNumber: req.body.mobileNumber,
+        hasPassword: !!req.body.password
+    });
     
     try {
         const { name, email, password, mobileNumber } = req.body;
 
         // Input validation
         if (!name || !email || !password || !mobileNumber) {
+            console.log('Missing fields:', {
+                hasName: !!name,
+                hasEmail: !!email,
+                hasPassword: !!password,
+                hasMobile: !!mobileNumber
+            });
             return res.status(400).json({ 
                 message: "All fields are required",
-                success: false 
+                success: false,
+                details: {
+                    name: !name ? 'Name is required' : null,
+                    email: !email ? 'Email is required' : null,
+                    password: !password ? 'Password is required' : null,
+                    mobileNumber: !mobileNumber ? 'Mobile number is required' : null
+                }
             });
         }
 
@@ -162,21 +179,41 @@ export const verifyOTP = async (req, res) => {
 };
 
 export const login = async (req, res) => {
+    console.log('Login attempt received:', { email: req.body.email });
     const { email, password } = req.body;
+    
     try {
+        if (!email || !password) {
+            return res.status(400).json({
+                message: "Email and password are required",
+                success: false
+            });
+        }
+
         const extinguser = await users.findOne({ email });
         if (!extinguser) {
-            return res.status(404).json({ message: "User does not exists" })
+            console.log('Login failed: User not found:', { email });
+            return res.status(404).json({ 
+                message: "User does not exist",
+                success: false 
+            });
         }
+
         const ispasswordcrct = await bcrypt.compare(password, extinguser.password);
         if (!ispasswordcrct) {
-            res.status(400).json({ message: "Invalid credentiasl" });
-            return
+            console.log('Login failed: Invalid password for user:', { email });
+            return res.status(400).json({ 
+                message: "Invalid credentials",
+                success: false 
+            });
         }
+
         const token = jwt.sign({
-            email: extinguser.email, id: extinguser._id
-        }, process.env.JWT_SECRET, { expiresIn: "1h" }
-        )
+            email: extinguser.email, 
+            id: extinguser._id
+        }, process.env.JWT_SECRET || 'fallback-secret-key', { 
+            expiresIn: "1h" 
+        })
 
         res.status(200).json({ result: extinguser, token })
     } catch (error) {

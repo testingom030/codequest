@@ -21,14 +21,13 @@ app.use(express.json({ limit: "30mb", extended: true }))
 app.use(express.urlencoded({ limit: "30mb", extended: true }))
 // Configure CORS with more specific options
 app.use(cors({
-    origin: function(origin, callback) {
-        const allowedOrigins = [
-            'https://code-quest-frontend-sigma.vercel.app',
-            'http://localhost:3000',
-            'https://code-quest-flame.vercel.app',
-            'https://code-quest-frontend.vercel.app'
-        ];
-        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    origin: ['https://code-quest-frontend-sigma.vercel.app', 'http://localhost:3000', 'https://code-quest-flame.vercel.app', 'https://code-quest-frontend.vercel.app'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    maxAge: 600 // 10 minutes
+}));
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
@@ -154,6 +153,27 @@ app.use((err, req, res, next) => {
         message: err.message || 'Internal Server Error',
         stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Global error handler:', err);
+    res.status(err.status || 500).json({
+        message: err.message || 'Internal server error',
+        success: false,
+        error: process.env.NODE_ENV === 'development' ? err : undefined
+    });
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    process.exit(1);
 });
 
 // Export the Express API for Vercel

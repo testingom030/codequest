@@ -35,16 +35,31 @@ export const verifyOtp = (verificationData) => async (dispatch) => {
 };
 export const login =(authdata,navigate)=> async(dispatch)=>{
     try {
+        console.log('Attempting login with:', { email: authdata.email }); // Debug log
         const{data}=await api.login(authdata);
-        dispatch({type:"AUTH",data})
-        dispatch(setcurrentuser(JSON.parse(localStorage.getItem("Profile"))));
-        navigate("/")
-        return { success: true }
+        
+        if (data && data.result) {
+            console.log('Login successful, dispatching AUTH action'); // Debug log
+            dispatch({type:"AUTH",data});
+            dispatch(setcurrentuser(JSON.parse(localStorage.getItem("Profile"))));
+            navigate("/");
+            return { success: true };
+        } else {
+            console.error('Login failed: Invalid response format', data); // Debug log
+            return { 
+                success: false, 
+                error: 'Invalid response from server' 
+            };
+        }
     } catch (error) {
-        console.error('Error in login:', error);
+        console.error('Login error details:', {
+            response: error.response?.data,
+            message: error.message,
+            status: error.response?.status
+        });
         return { 
             success: false, 
-            error: error.message || "Invalid credentials"
+            error: error.response?.data?.message || error.message || "Invalid credentials"
         }
     }
 }
