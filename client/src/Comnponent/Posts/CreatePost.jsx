@@ -100,7 +100,11 @@ const CreatePost = ({ onPostCreated }) => {
 
   return (
     <div className="create-post">
-      <h3>{translate('Create Post')}</h3>
+      <div className="post-header">
+        <div className="header-content">
+          <h3>{translate('Create Post')}</h3>
+        </div>
+      </div>
       <form onSubmit={handleSubmit}>
         <textarea
           placeholder={translate("What's on your mind?")}
@@ -131,10 +135,17 @@ const CreatePost = ({ onPostCreated }) => {
         
         <button 
           type="submit" 
-          className="submit-post"
+          className={`submit-post ${isSubmitting ? 'submitting' : ''}`}
           disabled={isSubmitting || (!content.trim() && !media)}
         >
-          {isSubmitting ? translate('Posting...') : translate('Post')}
+          {isSubmitting ? (
+            <>
+              <span className="spinner"></span>
+              {translate('Posting...')}
+            </>
+          ) : (
+            translate('Post')
+          )}
         </button>
       </form>
     </div>

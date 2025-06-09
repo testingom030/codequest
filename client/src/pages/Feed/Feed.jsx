@@ -14,15 +14,19 @@ const Feed = () => {
 
   const fetchPosts = async () => {
     try {
+      setLoading(true);
+      setError(null);
+      
       if (!user?.result) {
         throw new Error('Authentication required');
       }
 
       const { data } = await getFeedPosts();
-      setPosts(data);
+      setPosts(data || []);
     } catch (err) {
       console.error('Error fetching posts:', err);
-      setError(err?.response?.data?.message || err.message || 'Failed to fetch posts');
+      setError(err.message || 'Failed to fetch posts');
+      setPosts([]);
     } finally {
       setLoading(false);
     }
@@ -56,9 +60,21 @@ const Feed = () => {
         <div className="feed-left">
           <CreatePost onPostCreated={handlePostCreated} />
           {loading ? (
-            <div className="loading">Loading posts...</div>
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <p>Loading posts...</p>
+            </div>
           ) : error ? (
-            <div className="error-message">{error}</div>
+            <div className="error-state">
+              <p>{error}</p>
+              <button onClick={fetchPosts} className="retry-button">
+                Try Again
+              </button>
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="empty-state">
+              <p>No posts yet. Be the first to share something!</p>
+            </div>
           ) : (
             <PostsView posts={posts} onPostUpdate={fetchPosts} />
           )}

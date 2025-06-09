@@ -1,15 +1,34 @@
 import axios from "axios";
 
-const API=axios.create({
+const API = axios.create({
     baseURL: process.env.REACT_APP_API_URL || "https://code-quest-flame.vercel.app",
     headers: {
         'Content-Type': 'application/json'
     }
 });
 
-API.interceptors.request.use((req)=>{
-    if(localStorage.getItem("Profile")){
-        req.headers.Authorization=`Bearer ${
+// Add response interceptor for better error handling
+API.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        // Handle response errors
+        if (error.response) {
+            // Server responded with a status code that falls out of the range of 2xx
+            return Promise.reject(error.response.data);
+        } else if (error.request) {
+            // The request was made but no response was received
+            return Promise.reject({ message: 'No response from server' });
+        } else {
+            // Something happened in setting up the request that triggered an Error
+            return Promise.reject({ message: error.message });
+        }
+    }
+);
+
+// Add request interceptor for authentication
+API.interceptors.request.use((req) => {
+    if (localStorage.getItem("Profile")) {
+        req.headers.Authorization = `Bearer ${
             JSON.parse(localStorage.getItem("Profile")).token
         }`;
     }
