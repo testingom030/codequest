@@ -71,7 +71,7 @@ app.get('/', (req, res) => {
     res.send("Codequest is running perfect")
 })
 
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 3001
 const database_url = process.env.MONGODB_URL
 
 // Enhanced MongoDB connection for serverless
