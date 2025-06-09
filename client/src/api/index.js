@@ -69,3 +69,13 @@ export const createPost = (postData) => {
 export const getFeedPosts = () => API.get('/posts/feed');
 export const likePost = (postId) => API.post(`/posts/${postId}/like`);
 export const commentPost = (postId, commentData) => API.post(`/posts/${postId}/comment`, commentData);
+
+// OTP Verification APIs
+export const sendEmailVerification = (email, language) => 
+    API.post('/language/verify-email', { email, language });
+
+export const sendSMSVerification = (phone, language) => 
+    API.post('/language/verify-phone', { phone, language });
+
+export const verifyOTPCode = (code, verificationId, language) => 
+    API.post('/language/verify-code', { code, verificationId, language });
