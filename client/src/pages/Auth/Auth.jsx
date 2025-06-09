@@ -49,7 +49,7 @@ const Auth = () => {
                 email, 
                 password, 
                 mobileNumber 
-            }, navigate));
+            }));
 
             if (result.success) {
                 setShowOtpVerification(true);
@@ -98,76 +98,15 @@ const Auth = () => {
         setEmail('');
         setMobileNumber('');
         setPassword('');
-        setError('');
-        setShowOtpVerification(false);
         setEmailOtp('');
         setMobileOtp('');
+        setError('');
+        setShowOtpVerification(false);
     };
 
-    return (
-        <section className='auth-section'>
-            {!showOtpVerification ? (
-                <>
-                    {isSignup && <Aboutauth />}
-                    <div className='auth-container'>
-                        <img src={icon} alt='Code Quest' className='login-logo' />
-                        <form onSubmit={handleSubmit}>
-                            {isSignup && (
-                                <label htmlFor="name">
-                                    <h4>Display Name</h4>
-                                    <input
-                                        type="text"
-                                        id="name"
-                                        name="name"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                    />
-                                </label>
-                            )}
-                            <label htmlFor="email">
-                                <h4>Email</h4>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    id="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                />
-                            </label>
-                            {isSignup && (
-                                <label htmlFor="mobile">
-                                    <h4>Mobile Number</h4>
-                                    <input
-                                        type="tel"
-                                        id="mobile"
-                                        name="mobile"
-                                        value={mobileNumber}
-                                        onChange={(e) => setMobileNumber(e.target.value)}
-                                        placeholder="Enter your mobile number"
-                                    />
-                                </label>
-                            )}
-                            <label htmlFor="password">
-                                <div style={{display:"flex", justifyContent:"space-between"}}>
-                                    <h4>Password</h4>
-                                    {!isSignup && <p style={{color: "#007ac6", fontSize:'13px'}}>Forgot password?</p>}
-                                </div>
-                                <input
-                                    type="password"
-                                    name="password"
-                                    id="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                />
-                            </label>
-                            {error && <p className='error-message'>{error}</p>}
-                            <button type='submit' className='auth-btn' disabled={isLoading}>
-                                {isLoading ? 'Loading...' : isSignup ? 'Sign up' : 'Log in'}
-                            </button>
-                        </form>
-                    </div>
-                </>
-            ) : (
+    if (showOtpVerification) {
+        return (
+            <section className='auth-section'>
                 <div className='auth-container'>
                     <h2>Verify Your Account</h2>
                     <form onSubmit={handleOtpVerification}>
@@ -199,7 +138,70 @@ const Auth = () => {
                         </button>
                     </form>
                 </div>
-            )}
+            </section>
+        );
+    }
+
+    return (
+        <section className='auth-section'>
+            {isSignup && <Aboutauth />}
+            <div className='auth-container'>
+                <img src={icon} alt='Code Quest' className='login-logo' />
+                <form onSubmit={handleSubmit}>
+                    {isSignup && (
+                        <label htmlFor="name">
+                            <h4>Display Name</h4>
+                            <input
+                                type="text"
+                                id="name"
+                                name="name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                            />
+                        </label>
+                    )}
+                    <label htmlFor="email">
+                        <h4>Email</h4>
+                        <input
+                            type="email"
+                            name="email"
+                            id="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                    </label>
+                    {isSignup && (
+                        <label htmlFor="mobile">
+                            <h4>Mobile Number</h4>
+                            <input
+                                type="tel"
+                                id="mobile"
+                                name="mobile"
+                                value={mobileNumber}
+                                onChange={(e) => setMobileNumber(e.target.value)}
+                                placeholder="Enter your mobile number"
+                            />
+                        </label>
+                    )}
+                    <label htmlFor="password">
+                        <div style={{display:"flex", justifyContent:"space-between"}}>
+                            <h4>Password</h4>
+                            {!isSignup && <p style={{color: "#007ac6", fontSize:'13px'}}>Forgot password?</p>}
+                        </div>
+                        <input
+                            type="password"
+                            name="password"
+                            id="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                    </label>
+                    {error && <p className='error-message'>{error}</p>}
+                    <button type='submit' className='auth-btn' disabled={isLoading}>
+                        {isLoading ? 'Loading...' : isSignup ? 'Sign up' : 'Log in'}
+                    </button>
+                </form>
+            </div>
             <p>
                 {isSignup ? 'Already have an account?' : "Don't have an account?"}
                 <button type='button' className='handle-switch-btn' onClick={handleSwitch}>
