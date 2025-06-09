@@ -162,30 +162,58 @@ export const verifyOTP = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-    const { email, password } = req.body;
     try {
-        const extinguser = await users.findOne({ email });
-        if (!extinguser) {
-            return res.status(404).json({ message: "User does not exists" })
-        }
-        const ispasswordcrct = await bcrypt.compare(password, extinguser.password);
-        if (!ispasswordcrct) {
-            res.status(400).json({ message: "Invalid credentiasl" });
-            return
-        }
-        const token = jwt.sign({
-            email: extinguser.email, id: extinguser._id
-        }, process.env.JWT_SECRET, { expiresIn: "1h" }
-        )
+        const { email, password } = req.body;
 
-        res.status(200).json({ result: extinguser, token })
-    } catch (error) {
-        console.error('Signup Error:', error); // Enhanced error logging
-        res.status(500).json({
-            message: "something went wrong...",
-            error: error.message,
-            type: error.name
+        // Input validation
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and password are required"
+            });
+        }
+
+        // Find user
+        const user = await users.findOne({ email });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        // Check password
+        const isPasswordCorrect = await bcrypt.compare(password, user.password);
+        if (!isPasswordCorrect) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid credentials"
+            });
+        }
+
+        // Generate token
+        const token = jwt.sign(
+            { email: user.email, id: user._id },
+            process.env.JWT_SECRET || 'fallback-secret-key',
+            { expiresIn: "24h" }
+        );
+
+        // Return success response
+        res.status(200).json({
+            success: true,
+            result: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                phoneNumber: user.phoneNumber,
+                token
+            }
         });
-        return
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({
+            success: false,
+            message: "Something went wrong! Please try again."
+        });
     }
-}
+};

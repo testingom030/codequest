@@ -33,18 +33,32 @@ export const verifyOtp = (verificationData) => async (dispatch) => {
         };
     }
 };
-export const login =(authdata,navigate)=> async(dispatch)=>{
+export const login = (authdata, navigate) => async (dispatch) => {
     try {
-        const{data}=await api.login(authdata);
-        dispatch({type:"AUTH",data})
-        dispatch(setcurrentuser(JSON.parse(localStorage.getItem("Profile"))));
-        navigate("/")
-        return { success: true }
+        const { data } = await api.login(authdata);
+        
+        if (data.success) {
+            // Store user data in localStorage
+            localStorage.setItem('Profile', JSON.stringify(data.result));
+            
+            // Update Redux store
+            dispatch({ type: 'AUTH', data });
+            dispatch(setcurrentuser(data.result));
+            
+            // Navigate to home page
+            navigate('/');
+            return { success: true };
+        } else {
+            return { 
+                success: false, 
+                error: data.message || 'Login failed'
+            };
+        }
     } catch (error) {
         console.error('Error in login:', error);
         return { 
             success: false, 
-            error: error.message || "Invalid credentials"
-        }
+            error: error.response?.data?.message || error.message || 'Invalid credentials'
+        };
     }
 }
