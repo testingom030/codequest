@@ -4,7 +4,7 @@ import cors from "cors"
 import dotenv from "dotenv"
 import path from "path"
 import { fileURLToPath } from 'url'
-import { ServerApiVersion } from 'mongodb'
+import { MongoClient, ServerApiVersion } from 'mongodb'
 import userroutes from "./routes/user.js"
 import questionroutes from "./routes/question.js"
 import answerroutes from "./routes/answer.js"
@@ -15,24 +15,19 @@ import languageRoutes from "./routes/language.js"
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Initialize Express app
 const app = express();
 dotenv.config();
-
-// Middleware
-app.use(express.json({ limit: "30mb", extended: true }));
-app.use(express.urlencoded({ limit: "30mb", extended: true }));
-
+app.use(express.json({ limit: "30mb", extended: true }))
+app.use(express.urlencoded({ limit: "30mb", extended: true }))
 // Configure CORS
-const allowedOrigins = [
-    'https://code-quest-frontend-sigma.vercel.app',
-    'http://localhost:3000',
-    'https://code-quest-flame.vercel.app',
-    'https://code-quest-frontend.vercel.app'
-];
-
 app.use(cors({
     origin: function(origin, callback) {
+        const allowedOrigins = [
+            'https://code-quest-frontend-sigma.vercel.app',
+            'http://localhost:3000',
+            'https://code-quest-flame.vercel.app',
+            'https://code-quest-frontend.vercel.app'
+        ];
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
@@ -46,12 +41,63 @@ app.use(cors({
     maxAge: 86400
 }));
 
-// Database connection state
+// Handle preflight requests
+app.options('*', cors());
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Health check endpoint
+app.get('/health', async (req, res) => {
+    try {
+        await connectToDatabase();
+        const mongoStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+        res.json({ 
+            status: 'ok',
+            mongodb: mongoStatus,
+            env: process.env.NODE_ENV || 'not set',
+            hasMongoUrl: !!process.env.MONGODB_URL
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            status: 'error',
+            mongodb: 'error',
+            message: error.message
+        });
+    }
+});
+
+app.post('/debug/echo', (req, res) => {
+    console.log('Debug - Headers:', req.headers);
+    console.log('Debug - Body:', req.body);
+    res.json({
+        received: {
+            body: req.body,
+            contentType: req.headers['content-type']
+        }
+    });
+});
+
+app.use("/user", userroutes);
+app.use('/questions', questionroutes);
+app.use('/answer', answerroutes);
+app.use('/avatar', avatarRoutes);
+app.use('/posts', postRoutes);
+app.use('/language', languageRoutes);
+
+app.get('/', (req, res) => {
+    res.send("Codequest is running perfect")
+})
+
+const PORT = process.env.PORT || 3001
+const database_url = process.env.MONGODB_URL
+
+// Enhanced MongoDB connection handling for serverless environment
 let isConnected = false;
 
-// Optimized database connection for serverless
 const connectToDatabase = async () => {
     if (isConnected) {
+        console.log('=> Using existing database connection');
         return;
     }
 
@@ -64,14 +110,14 @@ const connectToDatabase = async () => {
                 strict: true,
                 deprecationErrors: true,
             },
-            maxPoolSize: 1, // Optimized for serverless
+            maxPoolSize: 10,
             serverSelectionTimeoutMS: 5000,
             socketTimeoutMS: 45000,
         };
 
         await mongoose.connect(process.env.MONGODB_URL, mongoOptions);
         isConnected = true;
-        console.log('Database connected successfully');
+        console.log('=> Using new database connection');
     } catch (error) {
         console.error('Database connection error:', error);
         throw error;
@@ -87,74 +133,66 @@ app.use(async (req, res, next) => {
         console.error('Database connection middleware error:', error);
         res.status(500).json({ 
             message: 'Database connection failed', 
-            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined 
         });
     }
 });
 
-// Routes
-app.use("/user", userroutes);
-app.use('/questions', questionroutes);
-app.use('/answer', answerroutes);
-app.use('/avatar', avatarRoutes);
-app.use('/posts', postRoutes);
-app.use('/language', languageRoutes);
-
-// Health check endpoint
-app.get('/health', async (req, res) => {
-    try {
-        await connectToDatabase();
-        res.json({ 
-            status: 'ok',
-            mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
-        });
-    } catch (error) {
-        res.status(500).json({ 
-            status: 'error',
-            message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-        });
-    }
-});
-
-// Global error handling
-app.use((err, req, res, next) => {
-    console.error('Error:', err);
-    res.status(err.status || 500).json({
-        message: err.message || 'Internal server error',
-        error: process.env.NODE_ENV === 'development' ? err : undefined
-    });
-});
-
-// Handle disconnection
-mongoose.connection.on('disconnected', () => {
-    console.log('MongoDB disconnected');
-    isConnected = false;
-});
-
+// Error handling for MongoDB connection issues
 mongoose.connection.on('error', (error) => {
     console.error('MongoDB connection error:', error);
     isConnected = false;
 });
 
-// Handle process errors
+mongoose.connection.on('disconnected', () => {
+    console.log('MongoDB disconnected');
+    isConnected = false;
+});
+
+// Connect to MongoDB
+connectToDatabase()
+    .then(() => {
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    })
+    .catch((err) => {
+        console.error('Error in initial connection:', err);
+    });
+
+// Global error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Error:', err.message);
+    console.error('Stack:', err.stack);
+    
+    // Return error response
+    res.status(err.status || 500).json({
+        status: 'error',
+        message: err.message || 'Internal Server Error',
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Global error handler:', err);
+    res.status(err.status || 500).json({
+        message: err.message || 'Internal server error',
+        success: false,
+        error: process.env.NODE_ENV === 'development' ? err : undefined
+    });
+});
+
+// Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
+// Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
-    if (process.env.NODE_ENV !== 'production') {
-        process.exit(1);
-    }
+    process.exit(1);
 });
 
-// Start server if not in serverless environment
-if (process.env.NODE_ENV !== 'production') {
-    const PORT = process.env.PORT || 3001;
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-    });
-}
-
-// Export for serverless
+// Export the Express API for Vercel
 export default app;
