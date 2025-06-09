@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import PostsView from '../../Comnponent/Posts/PostsView';
 import CreatePost from '../../Comnponent/Posts/CreatePost';
-import FriendSearch from '../../Comnponent/FriendSearch/FriendSearch';
+import FriendSearch from '../../Comnponent/Friends/FriendSearch';
 import './Feed.css';
 
 const Feed = () => {
